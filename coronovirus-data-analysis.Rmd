@@ -3,8 +3,9 @@ title: "Prediction Coronvirus"
 author: "Jens Laufer"
 date: "2020/02/01"
 output:
-  pdf_document: default
+  md_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
