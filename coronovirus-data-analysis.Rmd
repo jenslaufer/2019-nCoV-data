@@ -1,0 +1,17 @@
+---
+title: "Data Analysis Coronvirus"
+author: "Jens Laufer"
+date: "2020/02/01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r}
+
+```
+
+
+## Prediction Coronovrius cases
