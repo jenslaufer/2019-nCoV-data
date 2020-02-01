@@ -1,8 +1,10 @@
 ---
-title: "Data Analysis Coronvirus"
+title: "Prediction Coronvirus"
 author: "Jens Laufer"
 date: "2020/02/01"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,8 +12,40 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 ```
 
 ```{r}
-
+library(tidyverse)
+library(bbplot)
+library(scales)
+library(forecast)
+library(tsbox)
 ```
 
 
-## Prediction Coronovrius cases
+```{r}
+data <- read_csv("data/cases.csv")
+```
+
+```{r fig.height=10, fig.width=20}
+data %>% 
+  ggplot(aes(x=day, y=cases)) +
+  geom_line() +
+  bbc_style()
+```
+```{r fig.height=10, fig.width=20}
+ts_c(data %>% select(cases)) %>%
+  auto.arima() %>%
+  forecast(h = 15) %>%
+  autoplot() +
+  scale_y_continuous(labels = comma) +
+  bbc_style()
+```
+```{r fig.height=10, fig.width=20}
+ts_c(data %>% select(cases)) %>%
+  forecast::ma(order=4) %>% 
+  forecast(h = 15) %>%
+  autoplot() +
+  scale_y_continuous(labels = comma) +
+  bbc_style()
+```
+
+
+
