@@ -3,9 +3,9 @@ title: "Prediction Coronvirus"
 author: "Jens Laufer"
 date: "2020/02/01"
 output:
-  md_document: default
-  html_document: default
   pdf_document: default
+  html_document: default
+  md_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -22,31 +22,37 @@ library(tsbox)
 
 
 ```{r}
-data <- read_csv("data/cases.csv")
+data <- read_csv("data/cases.csv") 
 ```
+
+
 
 ```{r fig.height=10, fig.width=20}
 data %>% 
-  ggplot(aes(x=day, y=cases)) +
+  ggplot(aes(x=date, y=cases)) +
   geom_line() +
   bbc_style()
 ```
 ```{r fig.height=10, fig.width=20}
-ts_c(data %>% select(cases)) %>%
-  auto.arima() %>%
-  forecast(h = 15) %>%
-  autoplot() +
-  scale_y_continuous(labels = comma) +
-  bbc_style()
+# data %>% bind_rows(
+# ts_c(data %>% select(cases)) %>%
+#   auto.arima() %>%
+#   forecast(h = 7) %>% 
+#   as_tibble() %>%  
+#   rename(cases=`Point Forecast`)) %>% 
+#   
+#   complete(date=seq(min(date), min(date)+(data %>% pull(date) %>% length()), by="1 day"))
 ```
 ```{r fig.height=10, fig.width=20}
+
 ts_c(data %>% select(cases)) %>%
-  forecast::ma(order=4) %>% 
-  forecast(h = 15) %>%
+  auto.arima() %>%
+  forecast(h = 7) %>% 
   autoplot() +
   scale_y_continuous(labels = comma) +
   bbc_style()
 ```
+
 
 
 
