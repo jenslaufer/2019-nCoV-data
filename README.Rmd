@@ -3,9 +3,9 @@ title: "Prediction Coronvirus"
 author: "Jens Laufer"
 date: "2020/02/01"
 output:
-  pdf_document: default
-  html_document: default
   md_document: default
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -18,41 +18,64 @@ library(bbplot)
 library(scales)
 library(forecast)
 library(tsbox)
+library(lubridate)
 ```
 
 
 ```{r}
-data <- read_csv("data/cases.csv") 
+data <- read_csv("data/confirmed.csv") 
+```
+
+```{r}
+data
+```
+
+
+
+
+```{r}
+data <- data %>% gather(-`Province/State`, -`Country/Region`, -`First confirmed date in country (Est.)`, -Lat, -Long, key = "date", value = "num") %>% 
+  mutate(num=replace_na(num,0), 
+         `Province/State`=as.factor(`Province/State`),
+         `Country/Region`=as.factor(`Country/Region`),
+         `First confirmed date in country (Est.)`=as.Date(`First confirmed date in country (Est.)`, format="%m/%d/%Y"),
+         date=as.POSIXct(date, format="%m/%d/%Y %I:%M %p")) 
 ```
 
 
 
 ```{r fig.height=10, fig.width=20}
-data %>% 
-  ggplot(aes(x=date, y=cases)) +
-  geom_line() +
+data %>% group_by(date) %>% 
+  summarise(total=sum(num)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x=date, y=total)) +
+  #geom_line()+
+  geom_smooth() +
   bbc_style()
 ```
-```{r fig.height=10, fig.width=20}
-# data %>% bind_rows(
-# ts_c(data %>% select(cases)) %>%
-#   auto.arima() %>%
-#   forecast(h = 7) %>% 
-#   as_tibble() %>%  
-#   rename(cases=`Point Forecast`)) %>% 
-#   
-#   complete(date=seq(min(date), min(date)+(data %>% pull(date) %>% length()), by="1 day"))
-```
-```{r fig.height=10, fig.width=20}
 
-ts_c(data %>% select(cases)) %>%
-  auto.arima() %>%
+
+```{r fig.height=10, fig.width=20}
+ts_c(data %>% group_by(date) %>% 
+  summarise(total=sum(num)) %>% 
+  ungroup() %>% select(total)) %>% 
+auto.arima() %>%
   forecast(h = 7) %>% 
   autoplot() +
   scale_y_continuous(labels = comma) +
   bbc_style()
 ```
 
-
-
+```{r fig.height=20, fig.width=20}
+data %>% 
+  group_by(`Country/Region`, date) %>%
+  summarise(total=sum(num)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x=date, y=total)) +
+  geom_line()+
+  geom_point(size=2)+
+  facet_wrap(~`Country/Region`, scales = "free_y")+
+  bbc_style()
+  
+```
 
