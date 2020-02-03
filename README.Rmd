@@ -75,4 +75,18 @@ data %>%
   bbc_style()
   
 ```
+```{r fig.height=20, fig.width=20}
+
+data %>% 
+  filter(`Country/Region` == "Mainland China") %>% 
+  group_by(`Province/State`, date) %>%
+  summarise(total=sum(num)) %>% 
+  ungroup() %>% 
+  ggplot(aes(x=date, y=total)) +
+  geom_line()+
+  geom_point(size=2)+
+  facet_wrap(~`Province/State`, scales = "free_y")+
+  bbc_style()
+  
+```
 
