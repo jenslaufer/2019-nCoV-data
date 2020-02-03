@@ -26,9 +26,6 @@ library(lubridate)
 data <- read_csv("data/confirmed.csv") 
 ```
 
-```{r}
-data
-```
 
 
 
