@@ -23,16 +23,17 @@ library(lubridate)
 
 
 ```{r}
-data <- read_csv("data/confirmed.csv") 
+confirmed <- read_csv("data/Confirmed.csv") 
 ```
 
 
 
 
 
+
 ```{r}
-data <-
-  data %>% gather(
+confirmed <-
+  confirmed %>% gather(
     -`Province/State`,
     -`Country/Region`,
     -`First confirmed date in country (Est.)`,
@@ -47,7 +48,7 @@ data <-
     `Country/Region` = as.factor(`Country/Region`),
     `First confirmed date in country (Est.)` = as.Date(`First confirmed date in country (Est.)`, format =
                                                          "%m/%d/%Y"),
-    datetime = as.POSIXct(date, format = "%m/%d/%Y %I:%M %p"),
+    datetime = as.POSIXct(date),
     date = as.Date(datetime)
   ) %>%
   group_by(`Province/State`, `Country/Region`, date) %>%
@@ -61,7 +62,7 @@ data <-
 
 
 ```{r fig.height=10, fig.width=20}
-data %>% group_by(datetime) %>% 
+confirmed %>% group_by(datetime) %>% 
   summarise(total=sum(num)) %>% 
   ungroup() %>% 
   ggplot(aes(x=datetime, y=total)) +
@@ -72,7 +73,7 @@ data %>% group_by(datetime) %>%
 
 
 ```{r fig.height=10, fig.width=20}
-ts_c(data %>% group_by(datetime) %>% 
+ts_c(confirmed %>% group_by(datetime) %>% 
   summarise(total=sum(num)) %>% 
   ungroup() %>% select(total)) %>% 
 auto.arima() %>%
@@ -83,7 +84,7 @@ auto.arima() %>%
 ```
 
 ```{r fig.height=20, fig.width=20}
-data %>% 
+confirmed %>% 
   group_by(`Country/Region`, datetime) %>%
   summarise(total=sum(num)) %>% 
   ungroup() %>% 
@@ -96,7 +97,7 @@ data %>%
 ```
 ```{r fig.height=20, fig.width=20}
 
-data %>% 
+confirmed %>% 
   filter(`Country/Region` == "Mainland China") %>% 
   group_by(`Province/State`, datetime) %>%
   summarise(total=sum(num)) %>% 
@@ -113,25 +114,27 @@ data %>%
 
 
 ```{r fig.height=20, fig.width=20}
-data %>% 
+confirmed %>% 
   filter(!is.nan(num_chg_pct)) %>% 
   filter(!is.infinite(num_chg_pct)) %>% 
   na.omit(num_chg_pct) %>% 
   filter(`Country/Region` == "Mainland China") %>% 
   ggplot(aes(x=date, y=num_chg_pct))+
   geom_bar(stat="identity") +
-  facet_wrap(~`Province/State`)
+  facet_wrap(~`Province/State`) +
+  bbc_style()
   
 ```
 ```{r}
-data %>% 
+confirmed %>% 
   filter(!is.nan(num_chg_pct)) %>% 
   filter(!is.infinite(num_chg_pct)) %>% 
   na.omit(num_chg_pct) %>% 
   filter(`Country/Region` == "Mainland China" &`Province/State` =="Hubei") %>% 
   ggplot(aes(x=date, y=num_chg_pct))+
   geom_bar(stat="identity") +
-  facet_wrap(~`Province/State`)
+  facet_wrap(~`Province/State`)+
+  bbc_style()
 ```
 
 

@@ -1,12 +1,15 @@
 
 import requests
+import pandas as pd
 
-url = f"https://docs.google.com/spreadsheets/d/1UF2pSkFTURko2OvfHWWlFpDFAr1UxCBA4JLwlSP6KFo/export?format=csv"
+url = "https://docs.google.com/spreadsheets/d/1UF2pSkFTURko2OvfHWWlFpDFAr1UxCBA4JLwlSP6KFo/export?format=xlsx"
 
-sheets = ['Confirmed', 'Deaths', 'Recovered']
+r = requests.get(url)
+with open('data/data.xlsx', 'wb') as f:
+    f.write(r.content)
 
+sheets = ['Confirmed', 'Death', 'Recovered']
 
 for sheet in sheets:
-    r = requests.get(url)
-    with open(f'data/{sheet}.csv', 'wb') as f:
-        f.write(r.content)
+    pd.read_excel("data/data.xlsx",
+                  sheet_name=sheet).to_csv(f"data/{sheet}.csv", index=None)
