@@ -24,10 +24,9 @@ library(lubridate)
 
 ```{r}
 confirmed <- read_csv("data/Confirmed.csv") 
+death <- read_csv("data/Death.csv")
+recovered <-  read_csv("data/Recovered.csv")
 ```
-
-
-
 
 
 
@@ -40,10 +39,10 @@ confirmed <-
     -Lat,
     -Long,
     key = "date",
-    value = "num"
+    value = "confirmed"
   ) %>%
   mutate(
-    num = replace_na(num, 0),
+    confirmed = replace_na(confirmed, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
     `First confirmed date in country (Est.)` = as.Date(`First confirmed date in country (Est.)`, format =
@@ -55,15 +54,82 @@ confirmed <-
   top_n(1) %>%
   arrange(`Country/Region`, `Province/State`, datetime) %>%
   group_by(`Country/Region`, `Province/State`) %>%
-  mutate(num_chg_pct = num / dplyr::lag(num)) %>%
+  mutate(confirmed_chg_pct = confirmed / dplyr::lag(confirmed)) %>%
   ungroup()
+```
+
+
+```{r}
+death <-
+  death %>% gather(
+    -`Province/State`,
+    -`Country/Region`,
+    -`First confirmed date in country`,
+    -Lat,
+    -Long,
+    key = "date",
+    value = "death"
+  ) %>%
+  mutate(
+    death = replace_na(death, 0),
+    `Province/State` = as.factor(`Province/State`),
+    `Country/Region` = as.factor(`Country/Region`),
+    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
+                                                         "%m/%d/%Y"),
+    datetime = as.POSIXct(date),
+    date = as.Date(datetime)
+  ) %>%
+  group_by(`Province/State`, `Country/Region`, date) %>%
+  top_n(1) %>%
+  arrange(`Country/Region`, `Province/State`, datetime) %>%
+  group_by(`Country/Region`, `Province/State`) %>%
+  mutate(death_chg_pct = death / dplyr::lag(death)) %>%
+  ungroup()
+```
+
+```{r}
+recovered <-
+  recovered %>% gather(
+    -`Province/State`,
+    -`Country/Region`,
+    -`First confirmed date in country`,
+    -Lat,
+    -Long,
+    key = "date",
+    value = "recovered"
+  ) %>%
+  mutate(
+    recovered = replace_na(recovered, 0),
+    `Province/State` = as.factor(`Province/State`),
+    `Country/Region` = as.factor(`Country/Region`),
+    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
+                                                         "%m/%d/%Y"),
+    datetime = as.POSIXct(date),
+    date = as.Date(datetime)
+  ) %>%
+  group_by(`Province/State`, `Country/Region`, date) %>%
+  top_n(1) %>%
+  arrange(`Country/Region`,`Country/Region`,  datetime) %>%
+  group_by(`Country/Region`, `Province/State`) %>%
+  mutate(recovered_chg_pct = recovered / dplyr::lag(recovered)) %>%
+  ungroup()
+```
+
+```{r}
+data <- confirmed %>% 
+  left_join(death %>% select(-Lat, -Long, -`First confirmed date in country`,-date)) %>% 
+  left_join(recovered %>% select(-Lat, -Long, -`First confirmed date in country`,-date))
+
+rm(confirmed)
+rm(death)
+rm(recovered)
 ```
 
 
 
 ```{r fig.height=10, fig.width=20}
-confirmed %>% group_by(datetime) %>% 
-  summarise(total=sum(num)) %>% 
+data %>% group_by(datetime) %>% 
+  summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
   ggplot(aes(x=datetime, y=total)) +
   #geom_line()+
@@ -73,8 +139,8 @@ confirmed %>% group_by(datetime) %>%
 
 
 ```{r fig.height=10, fig.width=20}
-ts_c(confirmed %>% group_by(datetime) %>% 
-  summarise(total=sum(num)) %>% 
+ts_c(data %>% group_by(datetime) %>% 
+  summarise(total=sum(confirmed)) %>% 
   ungroup() %>% select(total)) %>% 
 auto.arima() %>%
   forecast(h = 7) %>% 
@@ -84,9 +150,9 @@ auto.arima() %>%
 ```
 
 ```{r fig.height=20, fig.width=20}
-confirmed %>% 
+data %>% 
   group_by(`Country/Region`, datetime) %>%
-  summarise(total=sum(num)) %>% 
+  summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
   ggplot(aes(x=datetime, y=total)) +
   geom_line()+
@@ -97,10 +163,10 @@ confirmed %>%
 ```
 ```{r fig.height=20, fig.width=20}
 
-confirmed %>% 
+data %>% 
   filter(`Country/Region` == "Mainland China") %>% 
   group_by(`Province/State`, datetime) %>%
-  summarise(total=sum(num)) %>% 
+  summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
   ggplot(aes(x=datetime, y=total)) +
   geom_line()+
@@ -114,24 +180,24 @@ confirmed %>%
 
 
 ```{r fig.height=20, fig.width=20}
-confirmed %>% 
-  filter(!is.nan(num_chg_pct)) %>% 
-  filter(!is.infinite(num_chg_pct)) %>% 
-  na.omit(num_chg_pct) %>% 
+data %>% 
+  filter(!is.nan(confirmed_chg_pct)) %>% 
+  filter(!is.infinite(confirmed_chg_pct)) %>% 
+  na.omit(confirmed_chg_pct) %>% 
   filter(`Country/Region` == "Mainland China") %>% 
-  ggplot(aes(x=date, y=num_chg_pct))+
+  ggplot(aes(x=date, y=confirmed_chg_pct))+
   geom_bar(stat="identity") +
   facet_wrap(~`Province/State`) +
   bbc_style()
   
 ```
 ```{r}
-confirmed %>% 
-  filter(!is.nan(num_chg_pct)) %>% 
-  filter(!is.infinite(num_chg_pct)) %>% 
-  na.omit(num_chg_pct) %>% 
+data %>% 
+  filter(!is.nan(confirmed_chg_pct)) %>% 
+  filter(!is.infinite(confirmed_chg_pct)) %>% 
+  na.omit(confirmed_chg_pct) %>% 
   filter(`Country/Region` == "Mainland China" &`Province/State` =="Hubei") %>% 
-  ggplot(aes(x=date, y=num_chg_pct))+
+  ggplot(aes(x=date, y=confirmed_chg_pct))+
   geom_bar(stat="identity") +
   facet_wrap(~`Province/State`)+
   bbc_style()
