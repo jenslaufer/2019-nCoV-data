@@ -35,7 +35,7 @@ confirmed <-
   confirmed %>% gather(
     -`Province/State`,
     -`Country/Region`,
-    -`First confirmed date in country (Est.)`,
+    -`First confirmed date in country`,
     -Lat,
     -Long,
     key = "date",
@@ -45,7 +45,7 @@ confirmed <-
     confirmed = replace_na(confirmed, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    `First confirmed date in country (Est.)` = as.Date(`First confirmed date in country (Est.)`, format =
+    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
                                                          "%m/%d/%Y"),
     datetime = as.POSIXct(date),
     date = as.Date(datetime)
@@ -143,7 +143,7 @@ ts_c(data %>% group_by(datetime) %>%
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% select(total)) %>% 
 auto.arima() %>%
-  forecast(h = 7) %>% 
+  forecast(h = 10) %>% 
   autoplot() +
   scale_y_continuous(labels = comma) +
   bbc_style()
@@ -181,26 +181,42 @@ data %>%
 
 ```{r fig.height=20, fig.width=20}
 data %>% 
-  filter(!is.nan(confirmed_chg_pct)) %>% 
-  filter(!is.infinite(confirmed_chg_pct)) %>% 
-  na.omit(confirmed_chg_pct) %>% 
   filter(`Country/Region` == "Mainland China") %>% 
   ggplot(aes(x=date, y=confirmed_chg_pct))+
   geom_bar(stat="identity") +
+  geom_smooth()+
   facet_wrap(~`Province/State`) +
   bbc_style()
   
 ```
+
 ```{r}
-data %>% 
-  filter(!is.nan(confirmed_chg_pct)) %>% 
-  filter(!is.infinite(confirmed_chg_pct)) %>% 
-  na.omit(confirmed_chg_pct) %>% 
-  filter(`Country/Region` == "Mainland China" &`Province/State` =="Hubei") %>% 
-  ggplot(aes(x=date, y=confirmed_chg_pct))+
+mainland.china <- data %>%
+  group_by(`Country/Region`, date) %>%
+  summarise(
+    confirmed = sum(confirmed),
+    death = sum(death),
+    recovered = sum(recovered)
+  ) %>%
+  mutate(
+    confirmed_chg_pct = confirmed / dplyr::lag(confirmed),
+    death_chg_pct = death / dplyr::lag(death),
+    recovered_chg_pct = recovered / dplyr::lag(recovered),
+    death_rate=death/confirmed,
+    recovery_rate=death/recovered,
+  ) %>%
+  ungroup() %>% 
+  filter(`Country/Region` == "Mainland China")
+```
+
+
+
+
+```{r}
+mainland.china %>% 
+  ggplot(aes(x=date, confirmed_chg_pct)) +
   geom_bar(stat="identity") +
-  facet_wrap(~`Province/State`)+
-  bbc_style()
+  geom_smooth()
 ```
 
 
