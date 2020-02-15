@@ -24,7 +24,7 @@ library(lubridate)
 
 ```{r}
 confirmed <- read_csv("data/Confirmed.csv") 
-death <- read_csv("data/Death.csv")
+death <- read_csv("data/Deaths.csv")
 recovered <-  read_csv("data/Recovered.csv")
 ```
 
@@ -44,12 +44,11 @@ confirmed <-
     confirmed = replace_na(confirmed, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    datetime = as.POSIXct(date),
-    date = as.Date(datetime)
+    date = as.Date(date, format="%m/%d/%Y")
   ) %>%
   group_by(`Province/State`, `Country/Region`, date) %>%
   top_n(1) %>%
-  arrange(`Country/Region`, `Province/State`, datetime) %>%
+  arrange(`Country/Region`, `Province/State`, date) %>%
   group_by(`Country/Region`, `Province/State`) %>%
   mutate(confirmed_chg_pct = confirmed / dplyr::lag(confirmed)) %>%
   ungroup()
@@ -70,12 +69,11 @@ death <-
     death = replace_na(death, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    datetime = as.POSIXct(date),
-    date = as.Date(datetime)
+    date = as.Date(date, format="%m/%d/%Y")
   ) %>%
   group_by(`Province/State`, `Country/Region`, date) %>%
   top_n(1) %>%
-  arrange(`Country/Region`, `Province/State`, datetime) %>%
+  arrange(`Country/Region`, `Province/State`, date) %>%
   group_by(`Country/Region`, `Province/State`) %>%
   mutate(death_chg_pct = death / dplyr::lag(death)) %>%
   ungroup()
@@ -95,12 +93,11 @@ recovered <-
     recovered = replace_na(recovered, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    datetime = as.POSIXct(date),
-    date = as.Date(datetime)
+    date = as.Date(date, format="%m/%d/%Y")
   ) %>%
   group_by(`Province/State`, `Country/Region`, date) %>%
   top_n(1) %>%
-  arrange(`Country/Region`,`Country/Region`,  datetime) %>%
+  arrange(`Country/Region`,`Country/Region`,  date) %>%
   group_by(`Country/Region`, `Province/State`) %>%
   mutate(recovered_chg_pct = recovered / dplyr::lag(recovered)) %>%
   ungroup()
@@ -108,8 +105,9 @@ recovered <-
 
 ```{r}
 data <- confirmed %>% 
-  left_join(death %>% select(-Lat, -Long, -date)) %>% 
-  left_join(recovered %>% select(-Lat, -Long, -date))
+  left_join(death %>% select(-Lat, -Long)) %>% 
+  left_join(recovered %>% select(-Lat, -Long)) %>% 
+  mutate(date=date %m+% years(2000))
 data %>% 
   select(-recovered_chg_pct, -death_chg_pct, -confirmed_chg_pct) %>%
   write_csv("data/COVID19.csv")
@@ -122,10 +120,10 @@ rm(recovered)
 
 
 ```{r fig.height=10, fig.width=20}
-data %>% group_by(datetime) %>% 
+data %>% group_by(date) %>% 
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
-  ggplot(aes(x=datetime, y=total)) +
+  ggplot(aes(x=date, y=total)) +
   #geom_line()+
   geom_smooth() +
   bbc_style()
@@ -133,7 +131,7 @@ data %>% group_by(datetime) %>%
 
 
 ```{r fig.height=10, fig.width=20}
-ts_c(data %>% group_by(datetime) %>% 
+ts_c(data %>% group_by(date) %>% 
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% select(total)) %>% 
 auto.arima() %>%
@@ -145,10 +143,10 @@ auto.arima() %>%
 
 ```{r fig.height=20, fig.width=20}
 data %>% 
-  group_by(`Country/Region`, datetime) %>%
+  group_by(`Country/Region`, date) %>%
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
-  ggplot(aes(x=datetime, y=total)) +
+  ggplot(aes(x=date, y=total)) +
   geom_line()+
   geom_point(size=2)+
   facet_wrap(~`Country/Region`, scales = "free_y")+
@@ -159,10 +157,10 @@ data %>%
 
 data %>% 
   filter(`Country/Region` == "Mainland China") %>% 
-  group_by(`Province/State`, datetime) %>%
+  group_by(`Province/State`, date) %>%
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% 
-  ggplot(aes(x=datetime, y=total)) +
+  ggplot(aes(x=date, y=total)) +
   geom_line()+
   geom_point(size=2)+
   facet_wrap(~`Province/State`, scales = "free_y")+
