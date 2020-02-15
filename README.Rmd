@@ -35,7 +35,6 @@ confirmed <-
   confirmed %>% gather(
     -`Province/State`,
     -`Country/Region`,
-    -`First confirmed date in country`,
     -Lat,
     -Long,
     key = "date",
@@ -45,8 +44,6 @@ confirmed <-
     confirmed = replace_na(confirmed, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
-                                                         "%m/%d/%Y"),
     datetime = as.POSIXct(date),
     date = as.Date(datetime)
   ) %>%
@@ -64,7 +61,6 @@ death <-
   death %>% gather(
     -`Province/State`,
     -`Country/Region`,
-    -`First confirmed date in country`,
     -Lat,
     -Long,
     key = "date",
@@ -74,8 +70,6 @@ death <-
     death = replace_na(death, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
-                                                         "%m/%d/%Y"),
     datetime = as.POSIXct(date),
     date = as.Date(datetime)
   ) %>%
@@ -92,7 +86,6 @@ recovered <-
   recovered %>% gather(
     -`Province/State`,
     -`Country/Region`,
-    -`First confirmed date in country`,
     -Lat,
     -Long,
     key = "date",
@@ -102,8 +95,6 @@ recovered <-
     recovered = replace_na(recovered, 0),
     `Province/State` = as.factor(`Province/State`),
     `Country/Region` = as.factor(`Country/Region`),
-    `First confirmed date in country` = as.Date(`First confirmed date in country`, format =
-                                                         "%m/%d/%Y"),
     datetime = as.POSIXct(date),
     date = as.Date(datetime)
   ) %>%
@@ -117,8 +108,11 @@ recovered <-
 
 ```{r}
 data <- confirmed %>% 
-  left_join(death %>% select(-Lat, -Long, -`First confirmed date in country`,-date)) %>% 
-  left_join(recovered %>% select(-Lat, -Long, -`First confirmed date in country`,-date))
+  left_join(death %>% select(-Lat, -Long, -date)) %>% 
+  left_join(recovered %>% select(-Lat, -Long, -date))
+data %>% 
+  select(-recovered_chg_pct, -death_chg_pct, -confirmed_chg_pct) %>%
+  write_csv("data/COVID19.csv")
 
 rm(confirmed)
 rm(death)
