@@ -208,7 +208,8 @@ mainland.china <- data %>%
 mainland.china %>% 
   ggplot(aes(x=date, confirmed_chg_pct)) +
   geom_bar(stat="identity") +
-  geom_smooth()
+  geom_smooth() +
+  bbc_style()
 ```
 
 
