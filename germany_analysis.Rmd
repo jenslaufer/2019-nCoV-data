@@ -24,48 +24,9 @@ windowsFonts("Arial" = windowsFont("Arial"))
 
 
 ```{r}
-```
 
 
-```{r}
-
-
-data1 <- load.data.bno.news()  %>%
-  mutate(date = as.Date(datetime)) %>%
-  group_by(country, date) %>%
-  arrange(desc(country, date)) %>%
-  slice(n()) %>%
-  rename(name = `country`) %>% 
-  ungroup()
-
-data2 <- get.data.jhu()
-
-```
-
-
-
-
-```{r}
-filtered <- data1 %>% 
-  filter(
-      name == "Germany" |
-      name == "South Korea" |
-      name == "France" |
-      name == "Italy" |
-      name == "United States" |
-      name == "Iran" |
-      name == "United Kingdom" |
-      name == "Spain" |
-      name == "Japan" |
-      name == "Netherlands" |
-      name == "Sweden" |
-      name == "Switzerland"
-  ) %>% 
-  mutate(type="historical") 
-
-
-add.forecast <- function(data, .name, .h = 14) {
-  
+.add.forecast <- function(data, .name, .h = 14) {
   data %>%
     filter(name == .name) %>%
     select(cases) %>%
@@ -77,68 +38,8 @@ add.forecast <- function(data, .name, .h = 14) {
            type = "forecast") %>%
     rename(cases = `Point Forecast`) %>%
     select(name, `cases`, type)
-  
 }
 
-filtered <- filtered %>%
-  bind_rows(filtered %>% add.forecast("Germany")) %>%
-  bind_rows(filtered %>% add.forecast("South Korea")) %>%
-  bind_rows(filtered %>% add.forecast("France")) %>%
-  bind_rows(filtered %>% add.forecast("Italy")) %>% 
-  bind_rows(filtered %>% add.forecast("United States")) %>%
-  bind_rows(filtered %>% add.forecast("Iran")) %>% 
-  bind_rows(filtered %>% add.forecast("United Kingdom")) %>%
-  bind_rows(filtered %>% add.forecast("Spain")) %>%
-  bind_rows(filtered %>% add.forecast("Japan")) %>%
-  bind_rows(filtered %>% add.forecast("Netherlands"))%>%
-  bind_rows(filtered %>% add.forecast("Sweden"))%>%
-  bind_rows(filtered %>% add.forecast("Switzerland"))%>%
-  group_by(name) %>%
-  mutate(day = row_number()) %>%
-  ungroup()
-```
-
-
-```{r}
-china.filtered <- data2 %>%
-  filter(`Country/Region` == "Mainland China") %>%
-  select(date, `Country/Region`, confirmed) %>%
-  group_by(date, `Country/Region`) %>% 
-  summarise(confirmed=sum(confirmed)) %>% 
-  ungroup() %>% 
-  mutate(day=row_number(),  type = "historical") %>% 
-  rename(name = `Country/Region`, cases = `confirmed`) %>% 
-  ungroup() 
-
-filtered <- filtered %>% bind_rows(china.filtered)
-filtered <- filtered %>% 
-  group_by(name) %>% 
-  mutate(diff=cases/lag(cases)) %>% 
-  ungroup()
-
-thresholds <- filtered %>% 
-  group_by(name) %>% 
-  filter(cases >= 100) %>% 
-  slice(1) %>% 
-  select(name, day) %>% 
-  rename(threshold = day) %>% 
-  ungroup()
-
-filtered <- filtered %>% 
-  inner_join(thresholds)%>% 
-  mutate(day=day-threshold) %>% 
-  select(-threshold) %>% 
-  ungroup()
-
-
-```
-
-
-
-
-
-
-```{r}
 cases.timelime.country <- function(data, country) {
   data %>%
     filter(name == country & diff != 1) %>%
@@ -161,9 +62,9 @@ cases.timelime <- function(data) {
     geom_line(aes(linetype = type), size = 2) +
     geom_hline(yintercept = 100) +
     geom_vline(xintercept = 0) +
-    scale_color_tableau(palette = "Tableau20") +
+    scale_color_tableau(palette = "Tableau 20") +
     scale_y_log10(label = comma) +
-    scale_linetype_manual(values=c("dotted", "solid")) +
+    scale_linetype_manual(values = c("dotted", "solid")) +
     scale_x_continuous(breaks = c(0, seq(min(data$day), max(data$day)), 10)) +
     labs(title = "Confirmed COVID-19 Cases", subtitle = "Cases on logarithmic scale in selected countries on a certain day of outbreak. Days are centered on the first past 100 cases.") +
     bbc_style()
@@ -180,6 +81,89 @@ cases.timelime <- function(data) {
 
 
 
+```{r}
+data1 <- load.data.bno.news()  %>%
+  mutate(date = as.Date(datetime)) %>%
+  group_by(country, date) %>%
+  arrange(desc(country, date)) %>%
+  slice(n()) %>%
+  rename(name = `country`) %>%
+  ungroup() %>%
+  mutate(type = "historical") %>% 
+  ungroup()
+
+data2 <- get.data.jhu()
+```
+
+```{r}
+
+data1 <-  data1 %>%
+  bind_rows(data1 %>% distinct(name)
+            %>%
+              pull(name) %>%
+              map( ~ .add.forecast(data1, (.)))) %>%
+  group_by(name) %>%
+  mutate(day = row_number()) %>%
+
+thresholds <- data1 %>% 
+  group_by(name) %>% 
+  filter(cases >= 100) %>% 
+  slice(1) %>% 
+  select(name, day) %>% 
+  rename(threshold = day) %>% 
+  ungroup()
+
+data1 <- data1 %>% 
+  inner_join(thresholds)%>% 
+  mutate(day=day-threshold) %>% 
+  select(-threshold) %>% 
+  ungroup()
+```
+
+
+
+
+
+```{r}
+filtered <- data1 %>%
+  filter(
+    name == "Germany" |
+      name == "South Korea" |
+      name == "France" |
+      name == "Italy" |
+      name == "United States" |
+      name == "Iran" |
+      name == "United Kingdom" |
+      name == "Spain" |
+      name == "Japan" |
+      name == "Netherlands" |
+      name == "Sweden" |
+      name == "Switzerland"
+  )
+
+```
+
+
+```{r}
+china.filtered <- data2 %>%
+  filter(`Country/Region` == "Mainland China") %>%
+  select(date, `Country/Region`, confirmed) %>%
+  group_by(date, `Country/Region`) %>% 
+  summarise(confirmed=sum(confirmed)) %>% 
+  ungroup() %>% 
+  mutate(day=row_number(),  type = "historical") %>% 
+  rename(name = `Country/Region`, cases = `confirmed`) %>% 
+  ungroup() 
+
+filtered <- filtered %>% bind_rows(china.filtered)
+filtered <- filtered %>% 
+  group_by(name) %>% 
+  mutate(diff=cases/lag(cases)) %>% 
+  ungroup()
+
+
+
+```
 
 
 
