@@ -19,103 +19,19 @@ library(scales)
 library(forecast)
 library(tsbox)
 library(lubridate)
+require(maps)
+require(viridis)
+source("dataGather.R")
 ```
 
 
-```{r}
-confirmed <- read_csv("data/Confirmed.csv") 
-death <- read_csv("data/Deaths.csv")
-recovered <-  read_csv("data/Recovered.csv")
-```
 
 
 
 ```{r}
-confirmed <-
-  confirmed %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
-    key = "date",
-    value = "confirmed"
-  ) %>%
-  mutate(
-    confirmed = replace_na(confirmed, 0),
-    `Province/State` = as.factor(`Province/State`),
-    `Country/Region` = as.factor(`Country/Region`),
-    date = as.Date(date, format="%m/%d/%Y")
-  ) %>%
-  group_by(`Province/State`, `Country/Region`, date) %>%
-  top_n(1) %>%
-  arrange(`Country/Region`, `Province/State`, date) %>%
-  group_by(`Country/Region`, `Province/State`) %>%
-  mutate(confirmed_chg_pct = confirmed / dplyr::lag(confirmed)) %>%
-  ungroup()
+data <- get.data.jhu()
 ```
 
-
-```{r}
-death <-
-  death %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
-    key = "date",
-    value = "death"
-  ) %>%
-  mutate(
-    death = replace_na(death, 0),
-    `Province/State` = as.factor(`Province/State`),
-    `Country/Region` = as.factor(`Country/Region`),
-    date = as.Date(date, format="%m/%d/%Y")
-  ) %>%
-  group_by(`Province/State`, `Country/Region`, date) %>%
-  top_n(1) %>%
-  arrange(`Country/Region`, `Province/State`, date) %>%
-  group_by(`Country/Region`, `Province/State`) %>%
-  mutate(death_chg_pct = death / dplyr::lag(death)) %>%
-  ungroup()
-```
-
-```{r}
-recovered <-
-  recovered %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
-    key = "date",
-    value = "recovered"
-  ) %>%
-  mutate(
-    recovered = replace_na(recovered, 0),
-    `Province/State` = as.factor(`Province/State`),
-    `Country/Region` = as.factor(`Country/Region`),
-    date = as.Date(date, format="%m/%d/%Y")
-  ) %>%
-  group_by(`Province/State`, `Country/Region`, date) %>%
-  top_n(1) %>%
-  arrange(`Country/Region`,`Country/Region`,  date) %>%
-  group_by(`Country/Region`, `Province/State`) %>%
-  mutate(recovered_chg_pct = recovered / dplyr::lag(recovered)) %>%
-  ungroup()
-```
-
-```{r}
-data <- confirmed %>% 
-  left_join(death %>% select(-Lat, -Long)) %>% 
-  left_join(recovered %>% select(-Lat, -Long)) %>% 
-  mutate(date=date %m+% years(2000))
-data %>% 
-  select(-recovered_chg_pct, -death_chg_pct, -confirmed_chg_pct) %>%
-  write_csv("data/COVID19.csv")
-
-rm(confirmed)
-rm(death)
-rm(recovered)
-```
 
 
 
@@ -135,7 +51,7 @@ ts_c(data %>% group_by(date) %>%
   summarise(total=sum(confirmed)) %>% 
   ungroup() %>% select(total)) %>% 
 auto.arima() %>%
-  forecast(h = 10) %>% 
+  forecast(h = 180) %>% 
   autoplot() +
   scale_y_continuous(labels = comma) +
   bbc_style()
@@ -211,5 +127,7 @@ mainland.china %>%
   geom_smooth() +
   bbc_style()
 ```
+
+
 
 
