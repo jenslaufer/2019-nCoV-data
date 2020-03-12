@@ -103,7 +103,7 @@ data1 <-  data1 %>%
               pull(name) %>%
               map( ~ .add.forecast(data1, (.)))) %>%
   group_by(name) %>%
-  mutate(day = row_number()) %>%
+  mutate(day = row_number()) 
 
 thresholds <- data1 %>% 
   group_by(name) %>% 
@@ -117,6 +117,12 @@ data1 <- data1 %>%
   inner_join(thresholds)%>% 
   mutate(day=day-threshold) %>% 
   select(-threshold) %>% 
+  ungroup()
+
+
+data1 <- data1 %>% 
+  group_by(name) %>% 
+  mutate(diff=cases/lag(cases)) %>% 
   ungroup()
 ```
 
