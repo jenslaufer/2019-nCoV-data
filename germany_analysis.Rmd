@@ -27,7 +27,7 @@ windowsFonts("Arial" = windowsFont("Arial"))
 
 
 
-.add.forecast <- function(data, .name, .h = 14) {
+.add.forecast <- function(data, .name, .h = 5) {
   data %>%
     filter(name == .name) %>%
     select(cases) %>%
@@ -164,6 +164,7 @@ filtered <- data1 %>%
       name == "United Kingdom" |
       name == "Spain" |
       name == "Japan" |
+      name == "Canada" |
       name == "Netherlands" |
       name == "Sweden" |
       name == "Switzerland"
@@ -188,20 +189,17 @@ filtered %>%
 
 
 ```{r fig.height=15, fig.width=30}
-filtered %>% 
+data1 %>% 
   filter(
       name == "Germany" |
       name == "Spain" |
-      name == "Italy" |
-      name == "Netherlands" |
-      name == "Switzerland" |
       name == "France" 
   ) %>% 
   cases.timelime()
 ```
 
 ```{r fig.height=15, fig.width=30}
-filtered %>% 
+data1 %>% 
   filter(
       name == "South Korea" |
       name == "Iran" |
