@@ -83,7 +83,7 @@ cases.timelime <- function(data) {
 
 
 ```{r}
-data1 <- load.data.bno.news()  %>%
+data <- load.data.bno.news()  %>%
   mutate(date = as.Date(datetime)) %>%
   group_by(country, date) %>%
   arrange(desc(country, date)) %>%
@@ -93,14 +93,14 @@ data1 <- load.data.bno.news()  %>%
   mutate(type = "historical") %>%
   ungroup()
 
-data2 <- get.data.jhu()
+data.jhu <- get.data.jhu()
 ```
 
 
 
 
 ```{r}
-china.filtered <- data2 %>%
+china.filtered <- data.jhu %>%
   filter(`Country/Region` == "China") %>%
   select(date, `Country/Region`, confirmed) %>%
   group_by(date, `Country/Region`) %>%
@@ -110,7 +110,9 @@ china.filtered <- data2 %>%
   rename(name = `Country/Region`, cases = `confirmed`) %>%
   ungroup()
 
-data1 <- data1 %>% bind_rows(china.filtered)
+data <- data %>% bind_rows(china.filtered)
+rm(china.filtered)
+rm(data.jhu)
 
 ```
 
@@ -118,15 +120,15 @@ data1 <- data1 %>% bind_rows(china.filtered)
 
 ```{r}
 
-data1 <-  data1 %>%
-  bind_rows(data1 %>% distinct(name)
+data <-  data %>%
+  bind_rows(data %>% distinct(name)
             %>%
               pull(name) %>%
-              map(~ .add.forecast(data1, (.)))) %>%
+              map(~ .add.forecast(data, (.)))) %>%
   group_by(name) %>%
   mutate(day = row_number())
 
-thresholds <- data1 %>%
+thresholds <- data %>%
   group_by(name) %>%
   filter(cases >= 100) %>%
   slice(1) %>%
@@ -134,14 +136,14 @@ thresholds <- data1 %>%
   rename(threshold = day) %>%
   ungroup()
 
-data1 <- data1 %>%
+data <- data %>%
   inner_join(thresholds) %>%
   mutate(day = day - threshold) %>%
   select(-threshold) %>%
   ungroup()
 
 
-data1 <- data1 %>%
+data <- data %>%
   group_by(name) %>%
   mutate(diff = cases / lag(cases)) %>%
   ungroup()
@@ -151,8 +153,14 @@ data1 <- data1 %>%
 
 
 
-```{r}
-filtered <- data1 %>%
+
+
+
+
+
+
+```{r fig.height=15, fig.width=30}
+data %>%
   filter(
     name == "Germany" |
       name == "South Korea" |
@@ -168,19 +176,7 @@ filtered <- data1 %>%
       name == "Netherlands" |
       name == "Sweden" |
       name == "Switzerland"
-  )
-
-```
-
-
-
-
-
-
-
-
-```{r fig.height=15, fig.width=30}
-filtered %>% 
+  ) %>%
   cases.timelime()
 ```
 
@@ -189,7 +185,7 @@ filtered %>%
 
 
 ```{r fig.height=15, fig.width=30}
-data1 %>% 
+data %>% 
   filter(
       name == "Germany" |
       name == "Spain" |
@@ -199,7 +195,7 @@ data1 %>%
 ```
 
 ```{r fig.height=15, fig.width=30}
-data1 %>% 
+data %>% 
   filter(
       name == "South Korea" |
       name == "Iran" |
