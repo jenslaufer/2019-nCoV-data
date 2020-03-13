@@ -24,9 +24,6 @@ windowsFonts("Arial" = windowsFont("Arial"))
 
 
 ```{r}
-
-
-
 .add.forecast <- function(data, .name, .h = 5) {
   data %>%
     filter(name == .name) %>%
@@ -91,7 +88,8 @@ data <- load.data.bno.news()  %>%
   rename(name = `country`) %>%
   ungroup() %>%
   mutate(type = "historical") %>%
-  ungroup()
+  ungroup() %>% 
+  filter()
 
 data.jhu <- get.data.jhu()
 ```
@@ -121,10 +119,13 @@ rm(data.jhu)
 ```{r}
 
 data <-  data %>%
+  group_by(name) %>% 
+  filter(!(datetime == max(datetime) & cases / lag(cases) == 1) ) %>% 
+  ungroup() %>% 
   bind_rows(data %>% distinct(name)
             %>%
               pull(name) %>%
-              map(~ .add.forecast(data, (.)))) %>%
+              map(~ .add.forecast(data, (.), 7))) %>%
   group_by(name) %>%
   mutate(day = row_number())
 
@@ -148,7 +149,6 @@ data <- data %>%
   mutate(diff = cases / lag(cases)) %>%
   ungroup()
 ```
-
 
 
 
@@ -204,4 +204,7 @@ data %>%
   cases.timelime() 
 ```
 
+```{r}
+data %>%  filter(name == "Iran")
+```
 

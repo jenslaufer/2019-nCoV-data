@@ -1,0 +1,32 @@
+---
+title: "Hospital Beds"
+author: "Jens Laufer"
+date: "13 3 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+``` 
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+hospital.beds <- read_csv("data/hospital_beds.csv") %>% 
+  select(-`Series Name`, -`Series Code`, -`Country Code`) %>% 
+  gather(-`Country Name`, key = "year", value = "beds.per.1000.inhabitants") %>% 
+  mutate(beds.per.1000.inhabitants=as.numeric(beds.per.1000.inhabitants)) %>% 
+  mutate(year=substring(year, 1, 4), year=as.numeric(year), year=as.factor(year)) %>% 
+  rename(country=`Country Name`) %>% 
+  mutate(country=as.factor(country))
+```
+
+
+```{r}
+hospital.beds %>% 
+  group_by(country) %>% 
+  slice(-1)
+```
+
