@@ -20,7 +20,6 @@ library(tsbox)
 library(forecast)
 
 source("dataGather.R")
-windowsFonts("Arial" = windowsFont("Arial"))
 ```
 
 
@@ -106,7 +105,6 @@ hospital.beds <- read_csv("data/hospital_beds.csv") %>%
 
 
 ```{r}
-
 data <- load.data.bno.news()  %>%
   mutate(date = as.Date(datetime)) %>%
   group_by(country, date) %>%
@@ -118,7 +116,6 @@ data <- load.data.bno.news()  %>%
   ungroup() %>% 
   filter()
 
-data.jhu <- get.data.jhu()
 ```
 
 
@@ -126,7 +123,9 @@ data.jhu <- get.data.jhu()
 
 
 
-```{r}
+```{r eval=F}
+
+data.jhu <- get.data.jhu()
 china.filtered <- data.jhu %>%
   filter(`Country/Region` == "China") %>%
   select(date, `Country/Region`, confirmed) %>%
@@ -180,7 +179,17 @@ data <- data %>%
   ungroup()
 ```
 
-
+```{r}
+data %>% filter(name=="Italy" & type=="historical") %>% 
+  select(name, date, cases, day, diff) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=date, y=diff))+
+  geom_bar(stat="identity") +
+  geom_smooth(
+      
+  )
+  
+```
 
 
 
@@ -255,5 +264,40 @@ data %>%
   scale_x_log10()+
   scale_y_log10(label=comma)+
   bbc_style()
+```
+```{r fig.height=10, fig.width=20}
+data %>%
+  filter(type == "historical") %>%
+  group_by(name) %>%
+  arrange(cases) %>%
+  slice(n()) %>%
+  left_join(hospital.beds) %>%
+  left_join(population) %>%
+  mutate(cases.per.1M.inhabitants = cases / population.mio) %>%
+  mutate(risk = cases.per.1M.inhabitants / beds.per.1M.inhabitants) %>%
+  select(name, risk) %>%
+  na.omit() %>% 
+  ggplot(aes(x = reorder(name, risk), risk)) +
+  geom_bar(stat = "identity", fill="steelblue") +
+  coord_flip() 
+```
+
+```{r}
+data %>%
+  filter(type == "historical") %>%
+  group_by(name) %>%
+  arrange(cases) %>%
+  slice(n()) %>%
+  left_join(hospital.beds) %>%
+  left_join(population) %>% 
+  filter(is.na(population.mio))
+```
+
+```{r}
+hospital.beds %>% 
+  mutate(name=ifelse(name=="Korea, Rep.", "South Korea", name), 
+  name=ifelse(name=="Egypt, Arab Rep.", "Egypt", name),
+  name=ifelse(name=="Iran, Islamic Rep.", "Iran", name),
+  name=ifelse(name=="Russian Federation", "Russia", name))
 ```
 
