@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 library(tidyverse)
 library(bbplot)
 library(ggthemes)
+library(ggrepel)
 library(scales)
 library(glue)
 library(tsbox)
@@ -89,7 +90,8 @@ hospital.beds <- read_csv("data/hospital_beds.csv") %>%
   group_by(name) %>% 
   na.omit() %>% 
   slice(n()) %>% 
-  ungroup()
+  ungroup() %>% 
+  select(-beds.per.1k.inhabitants)
 
  population <- read_csv("data/population.csv") %>% 
    mutate(Value=Value/1000000) %>% 
@@ -237,10 +239,21 @@ data %>%
 ```
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>% 
+  filter(type=="historical") %>% 
   group_by(name) %>% 
   arrange(cases) %>% 
-  slice(n())
+  slice(n()) %>% 
+  left_join(hospital.beds) %>% 
+  left_join(population) %>% 
+  mutate(cases.per.1M.inhabitants=cases/population.mio) %>% 
+  select(name, beds.per.1M.inhabitants, cases.per.1M.inhabitants, cases) %>% 
+  ggplot(aes(x=beds.per.1M.inhabitants, y=cases.per.1M.inhabitants)) +
+  geom_point(aes(size=cases))+
+  geom_label_repel(aes(label=name)) +
+  scale_x_log10()+
+  scale_y_log10(label=comma)+
+  bbc_style()
 ```
 
