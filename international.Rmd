@@ -77,9 +77,34 @@ cases.timelime <- function(data) {
 }
 ```
 
+```{r}
+
+
+hospital.beds <- read_csv("data/hospital_beds.csv") %>% 
+  select(-`Series Name`, -`Series Code`, -`Country Code`) %>% 
+  gather(-`Country Name`, key = "year", value = "beds.per.1k.inhabitants") %>% 
+  mutate(beds.per.1M.inhabitants=as.numeric(beds.per.1k.inhabitants)*1000) %>% 
+  mutate(year=substring(year, 1, 4), year=as.numeric(year), year=as.factor(year)) %>% 
+  rename(name=`Country Name`) %>% 
+  group_by(name) %>% 
+  na.omit() %>% 
+  slice(n()) %>% 
+  ungroup()
+
+ population <- read_csv("data/population.csv") %>% 
+   mutate(Value=Value/1000000) %>% 
+   rename(name=`Country Name`, population.mio=Value) %>% 
+   group_by(name) %>% 
+   arrange(Year) %>% 
+   slice(n()) %>% 
+   ungroup() %>% 
+   select(name, population.mio)
+```
+
 
 
 ```{r}
+
 data <- load.data.bno.news()  %>%
   mutate(date = as.Date(datetime)) %>%
   group_by(country, date) %>%
@@ -97,6 +122,8 @@ data.jhu <- get.data.jhu()
 
 
 
+
+
 ```{r}
 china.filtered <- data.jhu %>%
   filter(`Country/Region` == "China") %>%
@@ -109,6 +136,7 @@ china.filtered <- data.jhu %>%
   ungroup()
 
 data <- data %>% bind_rows(china.filtered)
+
 rm(china.filtered)
 rm(data.jhu)
 
@@ -189,6 +217,7 @@ data %>%
   filter(
       name == "Germany" |
       name == "Spain" |
+      name == "United States" |
       name == "France" 
   ) %>% 
   cases.timelime()
@@ -199,12 +228,19 @@ data %>%
   filter(
       name == "South Korea" |
       name == "Iran" |
+      name == "Spain" |
       name == "Italy"  
   ) %>% 
   cases.timelime() 
+
+
 ```
 
+
 ```{r}
-data %>%  filter(name == "Iran")
+data %>% 
+  group_by(name) %>% 
+  arrange(cases) %>% 
+  slice(n())
 ```
 
