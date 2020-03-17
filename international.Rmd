@@ -62,18 +62,18 @@ cases.timelime <- function(data) {
     geom_vline(xintercept = 0) +
     scale_color_tableau(palette = "Tableau 20") +
     scale_y_log10(label = comma) +
-    scale_linetype_manual(values = c("dotted", "solid")) +
-    scale_x_continuous(breaks = c(0, seq(min(data$day), max(data$day)), 10)) +
-    labs(title = "Confirmed COVID-19 Cases", subtitle = "Cases on logarithmic scale in selected countries on a certain day of outbreak. Days are centered on the first past 100 cases.") +
+    scale_linetype_manual(values = c("solid", "dotted"), limits=c("historical", "forecast")) +
+    scale_x_continuous(breaks = seq(min(data$day), max(data$day), 1)) +
+    labs(title = "Confirmed COVID-19 Cases", subtitle = "Cases on logarithmic scale on a certain day of outbreak. Days are centered on the first past after 100 cases.") +
     bbc_style()
-  
-  ggsave(plot,
-         filename = "c:\\temp\\plot1.png",
-         width = 20,
-         height = 10)
   
   plot
   
+}
+
+german <- function(plot){
+  plot +
+    labs(title = "Bestätigte COVID-19 Fälle", subtitle = "Fallzahlen auf logarithmischer Skala an einem bestimmten Tag nach Erreichen von 100 Fällen") 
 }
 ```
 
@@ -228,11 +228,38 @@ data %>%
   filter(
       name == "Germany" |
       name == "Spain" |
-      name == "United States" |
+      name == "Italy" |
       name == "France" 
   ) %>% 
+  filter(type=="historical") %>% 
   cases.timelime()
 ```
+
+```{r}
+data %>% 
+  filter(day==15) %>%  
+  filter(
+      name == "Germany" |
+      name == "Spain" |
+      name == "Italy" |
+      name == "United Kingdom" |
+      name == "France" 
+  ) 
+  
+```
+```{r fig.height=10, fig.width=20}
+data %>% 
+  filter(
+      name == "South Korea" |
+      name == "Iran" |
+      name == "Germany" 
+  ) %>% 
+  filter(type=="historical") %>% 
+  cases.timelime() 
+```
+
+
+
 
 ```{r fig.height=15, fig.width=30}
 data %>% 
@@ -299,5 +326,17 @@ hospital.beds %>%
   name=ifelse(name=="Egypt, Arab Rep.", "Egypt", name),
   name=ifelse(name=="Iran, Islamic Rep.", "Iran", name),
   name=ifelse(name=="Russian Federation", "Russia", name))
+```
+```{r fig.height=10, fig.width=20}
+data %>% 
+  filter(
+      name == "Germany" |
+      name == "Spain" |
+      name == "Italy" |
+      name == "United Kingdom" |
+      name == "France" 
+  ) %>% 
+  filter(type=="historical") %>% 
+  cases.timelime() %>% german()
 ```
 
