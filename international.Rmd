@@ -133,7 +133,9 @@ finalise_plot(plot, source_name = "Source: Jens Laufer (http://jenslaufer.com) D
 
 ```{r}
 data %>% 
-  filter(day==15) %>%  
+  filter(date<as.Date("2020-03-18")) %>%  
+  group_by(day) %>% 
+  slice(n()) %>% 
   filter(
       name == "Germany" |
       name == "Spain" |
@@ -217,5 +219,15 @@ data %>%
   ) %>% 
   filter(type=="historical") %>% 
   cases.timelime() %>% german()
+```
+
+```{r}
+data %>% 
+  filter(name == "Germany" |
+           name== "Italy" |
+           name == "Spain" |
+           name== "France"
+           ) %>% 
+  filter(day == 16)
 ```
 
