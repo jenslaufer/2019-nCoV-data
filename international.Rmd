@@ -205,24 +205,7 @@ data %>%
   coord_flip() 
 ```
 
-```{r}
-data %>%
-  filter(type == "historical") %>%
-  group_by(name) %>%
-  arrange(cases) %>%
-  slice(n()) %>%
-  left_join(hospital.beds) %>%
-  left_join(population) %>% 
-  filter(is.na(population.mio))
-```
 
-```{r}
-hospital.beds %>% 
-  mutate(name=ifelse(name=="Korea, Rep.", "South Korea", name), 
-  name=ifelse(name=="Egypt, Arab Rep.", "Egypt", name),
-  name=ifelse(name=="Iran, Islamic Rep.", "Iran", name),
-  name=ifelse(name=="Russian Federation", "Russia", name))
-```
 ```{r fig.height=10, fig.width=20}
 data %>% 
   filter(
