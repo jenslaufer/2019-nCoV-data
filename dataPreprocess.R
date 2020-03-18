@@ -17,7 +17,6 @@
 
 
 preprocess.data <- function(data) {
-  print("0")
   data <- data %>%
     group_by(name) %>%
     filter(!(datetime == max(datetime) &
@@ -38,7 +37,6 @@ preprocess.data <- function(data) {
     select(name, day) %>%
     rename(threshold = day) %>%
     ungroup()
-  print("2")
   
   data <- data %>%
     inner_join(thresholds) %>%
@@ -46,13 +44,10 @@ preprocess.data <- function(data) {
     select(-threshold) %>%
     ungroup()
   
-  print("3")
-  
   data <- data %>%
     group_by(name) %>%
     mutate(diff = cases / lag(cases)) %>%
     ungroup()
   
-  print("4")
   data
 }
