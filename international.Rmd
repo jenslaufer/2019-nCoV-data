@@ -20,106 +20,22 @@ library(tsbox)
 library(forecast)
 
 source("dataGather.R")
-```
-
-
-```{r}
-.add.forecast <- function(data, .name, .h = 5) {
-  data %>%
-    filter(name == .name) %>%
-    select(cases) %>%
-    auto.arima() %>%
-    forecast(h = .h) %>%
-    as_tibble() %>%
-    mutate(name = .name,
-           day = row_number(),
-           type = "forecast") %>%
-    rename(cases = `Point Forecast`) %>%
-    select(name, `cases`, type)
-}
-
-cases.timelime.country <- function(data, country) {
-  data %>%
-    filter(name == country & diff != 1) %>%
-    #filter(cases > 0) %>%
-    ggplot(aes(x = day, y = cases)) +
-    geom_line(aes(linetype = type), size = 2.5, color = "steelblue") +
-    scale_color_tableau() +
-    #scale_y_log10(label = comma) +
-    scale_x_continuous(breaks = seq(min(data$day), max(data$day), 2)) +
-    labs(title = "Confirmed COVID-19 Cases in {country}" %>% glue(), subtitle =
-           "Cases on logarithmic scale on a certain day of outbreak") +
-    bbc_style()
-}
-
-
-cases.timelime <- function(data) {
-  plot <- data %>%
-    filter(cases > 0 & diff != 1) %>%
-    ggplot(aes(x = day, y = cases, color = name)) +
-    geom_line(aes(linetype = type), size = 2) +
-    geom_hline(yintercept = 100) +
-    geom_vline(xintercept = 0) +
-    scale_color_tableau(palette = "Tableau 20") +
-    scale_y_log10(label = comma) +
-    scale_linetype_manual(values = c("solid", "dotted"), limits=c("historical", "forecast")) +
-    scale_x_continuous(breaks = seq(min(data$day), max(data$day), 1)) +
-    labs(title = "Confirmed COVID-19 Cases", subtitle = "Cases on logarithmic scale on a certain day of outbreak. Days are centered on the first past after 100 cases.") +
-    bbc_style()
-  
-  plot
-  
-}
-
-german <- function(plot){
-  plot +
-    labs(title = "Bestätigte COVID-19 Fälle", subtitle = "Fallzahlen auf logarithmischer Skala an einem bestimmten Tag nach Erreichen von 100 Fällen") 
-}
-```
-
-```{r}
-
-
-hospital.beds <- read_csv("data/hospital_beds.csv") %>% 
-  select(-`Series Name`, -`Series Code`, -`Country Code`) %>% 
-  gather(-`Country Name`, key = "year", value = "beds.per.1k.inhabitants") %>% 
-  mutate(beds.per.1M.inhabitants=as.numeric(beds.per.1k.inhabitants)*1000) %>% 
-  mutate(year=substring(year, 1, 4), year=as.numeric(year), year=as.factor(year)) %>% 
-  rename(name=`Country Name`) %>% 
-  group_by(name) %>% 
-  na.omit() %>% 
-  slice(n()) %>% 
-  ungroup() %>% 
-  select(-beds.per.1k.inhabitants)
-
- population <- read_csv("data/population.csv") %>% 
-   mutate(Value=Value/1000000) %>% 
-   rename(name=`Country Name`, population.mio=Value) %>% 
-   group_by(name) %>% 
-   arrange(Year) %>% 
-   slice(n()) %>% 
-   ungroup() %>% 
-   select(name, population.mio)
+source("dataPreprocess.R")
+source("visualisations.R")
 ```
 
 
 
 ```{r}
-data <- load.data.bno.news()  %>%
-  mutate(date = as.Date(datetime)) %>%
-  group_by(country, date) %>%
-  arrange(desc(country, date)) %>%
-  slice(n()) %>%
-  rename(name = `country`) %>%
-  ungroup() %>%
-  mutate(type = "historical") %>%
-  ungroup() %>% 
-  filter()
-
+hospital.beds <- load.hospital.beds()
+population <- load.populations()
 ```
 
 
 
+```{r}
+data <- load.data.bno.news()  
+```
 
 
 
@@ -147,36 +63,7 @@ rm(data.jhu)
 
 ```{r}
 
-data <-  data %>%
-  group_by(name) %>% 
-  filter(!(datetime == max(datetime) & cases / lag(cases) == 1) ) %>% 
-  ungroup() %>% 
-  bind_rows(data %>% distinct(name)
-            %>%
-              pull(name) %>%
-              map(~ .add.forecast(data, (.), 7))) %>%
-  group_by(name) %>%
-  mutate(day = row_number())
-
-thresholds <- data %>%
-  group_by(name) %>%
-  filter(cases >= 100) %>%
-  slice(1) %>%
-  select(name, day) %>%
-  rename(threshold = day) %>%
-  ungroup()
-
-data <- data %>%
-  inner_join(thresholds) %>%
-  mutate(day = day - threshold) %>%
-  select(-threshold) %>%
-  ungroup()
-
-
-data <- data %>%
-  group_by(name) %>%
-  mutate(diff = cases / lag(cases)) %>%
-  ungroup()
+data <-  data %>% preprocess.data()
 ```
 
 ```{r}
@@ -223,8 +110,8 @@ data %>%
 
 
 
-```{r fig.height=15, fig.width=30}
-data %>% 
+```{r fig.height=10, fig.width=20}
+plot <- data %>% 
   filter(
       name == "Germany" |
       name == "Spain" |
@@ -232,8 +119,17 @@ data %>%
       name == "France" 
   ) %>% 
   filter(type=="historical") %>% 
-  cases.timelime()
+  cases.timelime() 
+plot
 ```
+
+```{r fig.height=10, fig.width=20}
+finalise_plot(plot, source_name = "Source: Jens Laufer (http://jenslaufer.com) Data: BNO News", 
+              save_filepath = "case_compare.png",
+              width_pixels = 2000, height_pixels = 1000)
+
+```
+
 
 ```{r}
 data %>% 

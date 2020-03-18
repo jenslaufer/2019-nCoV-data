@@ -3,11 +3,49 @@ library(reticulate)
 library(lubridate)
 
 
+load.hospital.beds <- function() {
+  read_csv("data/hospital_beds.csv") %>%
+    select(-`Series Name`,-`Series Code`,-`Country Code`) %>%
+    gather(-`Country Name`, key = "year", value = "beds.per.1k.inhabitants") %>%
+    mutate(beds.per.1M.inhabitants = as.numeric(beds.per.1k.inhabitants) *
+             1000) %>%
+    mutate(
+      year = substring(year, 1, 4),
+      year = as.numeric(year),
+      year = as.factor(year)
+    ) %>%
+    rename(name = `Country Name`) %>%
+    group_by(name) %>%
+    na.omit() %>%
+    slice(n()) %>%
+    ungroup() %>%
+    select(-beds.per.1k.inhabitants)
+}
+
+load.populations <- function() {
+  read_csv("data/population.csv") %>%
+    mutate(Value = Value / 1000000) %>%
+    rename(name = `Country Name`, population.mio = Value) %>%
+    group_by(name) %>%
+    arrange(Year) %>%
+    slice(n()) %>%
+    ungroup() %>%
+    select(name, population.mio)
+}
+
 load.data.bno.news <- function() {
   read_csv(
     "https://raw.githubusercontent.com/alext234/coronavirus-stats/master/data/bnonews-international.csv"
   ) %>%
-    gather(-datetime, key = "country", value = "cases")
+    gather(-datetime, key = "country", value = "cases") %>%
+    mutate(date = as.Date(datetime)) %>%
+    group_by(country, date) %>%
+    arrange(desc(country, date)) %>%
+    slice(n()) %>%
+    rename(name = `country`) %>%
+    ungroup() %>%
+    mutate(type = "historical") %>%
+    ungroup()
 }
 
 load.data.jhu <- function() {
@@ -19,10 +57,7 @@ get.confirmed.jhu <- function() {
   confirmed <- read_csv("data/Confirmed.csv")
   
   confirmed %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
+    -`Province/State`,-`Country/Region`,-Lat,-Long,
     key = "date",
     value = "confirmed"
   ) %>%
@@ -49,10 +84,7 @@ get.deaths.jhu <- function() {
   death <- read_csv("data/Deaths.csv")
   
   death %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
+    -`Province/State`,-`Country/Region`,-Lat,-Long,
     key = "date",
     value = "death"
   ) %>%
@@ -67,7 +99,7 @@ get.deaths.jhu <- function() {
     arrange(`Country/Region`, `Province/State`, date) %>%
     group_by(`Country/Region`, `Province/State`) %>%
     mutate(death_chg_pct = death / dplyr::lag(death)) %>%
-    ungroup()%>%
+    ungroup() %>%
     mutate(date = date %m+% years(2000))
 }
 
@@ -76,10 +108,7 @@ get.recovered.jhu <- function() {
   recovered <-  read_csv("data/Recovered.csv")
   
   recovered %>% gather(
-    -`Province/State`,
-    -`Country/Region`,
-    -Lat,
-    -Long,
+    -`Province/State`,-`Country/Region`,-Lat,-Long,
     key = "date",
     value = "recovered"
   ) %>%
@@ -101,10 +130,10 @@ get.recovered.jhu <- function() {
 get.data.jhu <- function() {
   load.data.jhu()
   data <- get.confirmed.jhu() %>%
-    left_join(get.deaths.jhu() %>% select(-Lat, -Long)) %>%
-    left_join(get.recovered.jhu() %>% select(-Lat, -Long)) 
+    left_join(get.deaths.jhu() %>% select(-Lat,-Long)) %>%
+    left_join(get.recovered.jhu() %>% select(-Lat,-Long))
   data %>%
-    select(-recovered_chg_pct, -death_chg_pct, -confirmed_chg_pct) %>%
+    select(-recovered_chg_pct,-death_chg_pct,-confirmed_chg_pct) %>%
     write_csv("data/COVID19.csv")
   
   data
