@@ -2,6 +2,7 @@ library(tidyverse)
 library(reticulate)
 library(lubridate)
 
+PYTHON.PATH <- "/home/jens/anaconda3/bin/python"
 
 load.hospital.beds <- function() {
   read_csv("data/hospital_beds.csv") %>%
@@ -55,6 +56,7 @@ load.data.bno.news <- function() {
 }
 
 load.data.jhu <- function() {
+  reticulate::py_install(c("requests", "pandas"))
   reticulate::py_run_file("src/import.py")
 }
 

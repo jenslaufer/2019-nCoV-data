@@ -39,8 +39,7 @@ data <- load.data.bno.news()
 
 
 
-```{r eval=F}
-
+```{r eval=T}
 data.jhu <- get.data.jhu()
 china.filtered <- data.jhu %>%
   filter(`Country/Region` == "China") %>%
@@ -62,9 +61,15 @@ rm(data.jhu)
 
 
 ```{r}
-
 data <-  data %>% preprocess.data()
 ```
+
+```{r}
+data %>% 
+  filter(name=="Italy" | name=="Germany" | name=="Spain" | name=="France" | name=="China") %>% 
+  filter(day==17)
+```
+
 
 ```{r}
 data %>% filter(name=="Italy" & type=="historical") %>% 
@@ -112,6 +117,7 @@ data %>%
 
 ```{r fig.height=10, fig.width=20}
 plot <- data %>% 
+  filter(date < today()) %>% 
   filter(
       name == "Germany" |
       name == "Spain" |
@@ -119,7 +125,10 @@ plot <- data %>%
       name == "France" 
   ) %>% 
   filter(type=="historical") %>% 
-  cases.timelime() 
+  cases.timelime() %>% 
+  german() +
+  scale_y_continuous()+
+  coord_cartesian(xlim=c(9,18))
 plot
 ```
 
@@ -218,7 +227,7 @@ data %>%
       name == "France" 
   ) %>% 
   filter(type=="historical") %>% 
-  cases.timelime() %>% german()
+  cases.timelime(.trans="identity") %>% german()
 ```
 
 ```{r}

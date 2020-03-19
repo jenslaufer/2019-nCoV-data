@@ -1,6 +1,7 @@
 
 
-cases.timelime <- function(data) {
+
+cases.timelime <- function(data, .trans = "log10") {
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
     .palette = "Tableau 10"
@@ -12,7 +13,7 @@ cases.timelime <- function(data) {
     geom_hline(yintercept = 100) +
     geom_vline(xintercept = 0) +
     scale_color_tableau(palette = .palette) +
-    scale_y_log10(label = comma) +
+    scale_y_continuous(trans = .trans, label = comma) +
     scale_linetype_manual(
       values = c("solid", "dotted"),
       limits = c("historical", "forecast")
