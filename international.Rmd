@@ -67,8 +67,14 @@ data <-  data %>% preprocess.data()
 ```{r}
 data %>% 
   filter(name=="Italy" | name=="Germany" | name=="Spain" | name=="France" | name=="China") %>% 
-  filter(day==17)
+  filter(day==18)
 ```
+
+```{r}
+data %>% 
+  filter(name=="Italy")
+```
+
 
 
 ```{r}
@@ -112,11 +118,8 @@ data %>%
 ```
 
 
-
-
-
 ```{r fig.height=10, fig.width=20}
-plot <- data %>% 
+plot.coarse <- data %>% 
   filter(date < today()) %>% 
   filter(
       name == "Germany" |
@@ -124,16 +127,33 @@ plot <- data %>%
       name == "Italy" |
       name == "France" 
   ) %>% 
-  filter(type=="historical") %>% 
-  cases.timelime() %>% 
-  german() +
-  scale_y_continuous()+
-  coord_cartesian(xlim=c(9,18))
-plot
+  filter(type=="historical") %>%
+  cases.timelime() +
+  annotate()
+  
+plot.coarse
+```
+
+
+
+```{r fig.height=10, fig.width=20}
+plot.detailed <- data %>% 
+  filter(date < today()) %>% 
+  filter(
+      name == "Germany" |
+      name == "Spain" |
+      name == "Italy" |
+      name == "France" 
+  ) %>% 
+  filter(type=="historical") %>%
+  cases.timelime(.trans = "identity") +
+  coord_cartesian(xlim=c(9,19), ylim=c(3000,20000)) 
+  
+plot.detailed
 ```
 
 ```{r fig.height=10, fig.width=20}
-finalise_plot(plot, source_name = "Source: Jens Laufer (http://jenslaufer.com) Data: BNO News", 
+finalise_plot(plot %>%  german(), source_name = "Source: Jens Laufer (http://jenslaufer.com) Data: BNO News", 
               save_filepath = "case_compare.png",
               width_pixels = 2000, height_pixels = 1000)
 
@@ -157,8 +177,8 @@ data %>%
 ```{r fig.height=10, fig.width=20}
 data %>% 
   filter(
-      name == "South Korea" |
-      name == "Iran" |
+        name == "South Korea" |
+        name == "Iran" |
       name == "Germany" 
   ) %>% 
   filter(type=="historical") %>% 
@@ -230,13 +250,4 @@ data %>%
   cases.timelime(.trans="identity") %>% german()
 ```
 
-```{r}
-data %>% 
-  filter(name == "Germany" |
-           name== "Italy" |
-           name == "Spain" |
-           name== "France"
-           ) %>% 
-  filter(day == 16)
-```
 
