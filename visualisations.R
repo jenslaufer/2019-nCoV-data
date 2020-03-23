@@ -1,5 +1,6 @@
 
 
+
 cases.timelime <- function(data, .trans = "log10") {
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
@@ -22,11 +23,21 @@ cases.timelime <- function(data, .trans = "log10") {
     labs(title = "Confirmed COVID-19 Cases",
          subtitle = "Cases on a certain day of outbreak. Days are centered on the first past after 100 cases.",
          caption = "Source: Jens Laufer (https://jenslaufer.com) Data: BNO News") +
-  
+    
     bbc_style()
   
   plot
   
+}
+
+changes.plot <- function(data, .name) {
+  data %>% filter(name == .name & type == "historical") %>%
+    select(name, date, cases, day, diff) %>%
+    tail(10) %>%
+    ggplot(aes(x = date, y = diff)) +
+    geom_bar(stat = "identity") +
+    geom_smooth() +
+    bbc_style()
 }
 
 german <- function(plot) {

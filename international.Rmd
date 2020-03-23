@@ -85,12 +85,16 @@ data %>% filter(name=="Italy" & type=="historical") %>%
   ggplot(aes(x=date, y=diff))+
   geom_bar(stat="identity") +
   geom_smooth(
-      
-  )
+  ) +
+  bbc_style()
   
 ```
 
 
+```{r}
+data %>% changes.plot("Germany")
+  
+```
 
 
 
@@ -256,5 +260,7 @@ data %>%
   filter(type=="historical") %>% 
   cases.timelime(.trans="identity") %>% german()
 ```
+
+
 
 
