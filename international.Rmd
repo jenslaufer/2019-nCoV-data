@@ -61,7 +61,8 @@ rm(data.jhu)
 
 
 ```{r}
-data <-  data %>% preprocess.data()
+data <-  data %>% preprocess.data() 
+data %>% filter(type=="historical") %>% select(-type, -datetime) %>% write_csv("historical_confirmed_cases_countries.csv")
 ```
 
 ```{r}
@@ -128,12 +129,18 @@ plot.coarse <- data %>%
       name == "France" 
   ) %>% 
   filter(type=="historical") %>%
-  cases.timelime() +
-  annotate()
-  
-plot.coarse
+  cases.timelime() 
 ```
 
+```{r fig.height=10, fig.width=20}
+plot <- data %>% filter(name=="Italy" | name=="United States") %>% 
+  filter(type=="historical") %>% 
+  arrange(day) %>% 
+  cases.timelime() 
+finalise_plot(plot, source_name = "Source: Jens Laufer (http://jenslaufer.com) Data: BNO News", 
+              save_filepath = "usa_italy.png",
+              width_pixels = 2000, height_pixels = 1000)
+```
 
 
 ```{r fig.height=10, fig.width=20}
@@ -147,7 +154,7 @@ plot.detailed <- data %>%
   ) %>% 
   filter(type=="historical") %>%
   cases.timelime(.trans = "identity") +
-  coord_cartesian(xlim=c(9,19), ylim=c(3000,20000)) 
+  coord_cartesian(xlim=c(9,22), ylim=c(3000,20000)) 
   
 plot.detailed
 ```
