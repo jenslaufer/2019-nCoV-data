@@ -1,6 +1,7 @@
 
 
 
+
 cases.timelime <- function(data, .trans = "log10") {
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
@@ -32,9 +33,8 @@ cases.timelime <- function(data, .trans = "log10") {
 
 changes.plot <- function(data, .name) {
   data %>% filter(name == .name & type == "historical") %>%
-    select(name, date, cases, day, diff) %>%
-    tail(10) %>%
-    ggplot(aes(x = date, y = diff)) +
+    select(name, cases, day, diff) %>%
+    ggplot(aes(x = day, y = diff)) +
     geom_bar(stat = "identity") +
     geom_smooth() +
     bbc_style()

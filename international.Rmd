@@ -58,47 +58,45 @@ rm(data.jhu)
 
 ```
 
-
-
 ```{r}
 data <-  data %>% preprocess.data() 
 data %>% filter(type=="historical") %>% select(-type, -datetime) %>% write_csv("historical_confirmed_cases_countries.csv")
 ```
 
-```{r}
-data %>% 
-  filter(name=="Italy" | name=="Germany" | name=="Spain" | name=="France" | name=="China") %>% 
-  filter(day==18)
-```
 
 ```{r}
-data %>% 
-  filter(name=="Italy")
+data %>%  filter(name=="Italy" & day >=0 )  %>% changes.plot("Italy")
 ```
 
 
 
 ```{r}
-data %>% filter(name=="Italy" & type=="historical") %>% 
-  select(name, date, cases, day, diff) %>% 
-  tail(10) %>% 
-  ggplot(aes(x=date, y=diff))+
-  geom_bar(stat="identity") +
-  geom_smooth(
-  ) +
-  bbc_style()
+data %>%  filter(name=="France" & day >=0 )  %>% changes.plot("France")
   
 ```
 
-
 ```{r}
-data %>% changes.plot("Germany")
+data %>%  filter(name=="Germany" & day >=0 )  %>% changes.plot("Germany")
   
 ```
 
 
 
+```{r}
+data %>%  filter(name=="Spain" & day >=0 )  %>% changes.plot("Spain")
+  
+```
 
+
+```{r}
+data %>%  filter(name=="United States" & day >=0 )  %>% changes.plot("United States")
+  
+```
+
+```{r}
+data %>%  filter(name=="United Kingdom" & day >=0 )  %>% changes.plot("United Kingdom")
+  
+```
 
 
 ```{r fig.height=15, fig.width=30}
