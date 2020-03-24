@@ -2,6 +2,7 @@
 
 
 
+
 cases.timelime <- function(data, .trans = "log10") {
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
@@ -37,6 +38,8 @@ changes.plot <- function(data, .name) {
     ggplot(aes(x = day, y = diff)) +
     geom_bar(stat = "identity") +
     geom_smooth() +
+    labs(title = "Growth Rate Confirmed COVID-19 cases", x = "Day of Outbreak", y =
+           "Daily Growth Factor") +
     bbc_style()
 }
 

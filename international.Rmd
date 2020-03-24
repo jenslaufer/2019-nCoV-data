@@ -75,7 +75,7 @@ data %>%  filter(name=="France" & day >=0 )  %>% changes.plot("France")
   
 ```
 
-```{r}
+```{r fig.width=20}
 data %>%  filter(name=="Germany" & day >=0 )  %>% changes.plot("Germany")
   
 ```
@@ -156,7 +156,7 @@ plot.detailed <- data %>%
   ) %>% 
   filter(type=="historical") %>%
   cases.timelime(.trans = "identity") +
-  coord_cartesian(xlim=c(9,22), ylim=c(3000,20000)) 
+  coord_cartesian(xlim=c(9,24), ylim=c(3000,20000)) 
   
 plot.detailed
 ```

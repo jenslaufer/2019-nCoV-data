@@ -1,0 +1,28 @@
+---
+title: "Covid-19 Bundesländer"
+author: "Jens Laufer"
+date: "24 3 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message=F, echo = F)
+```
+
+```{r}
+library(tidyverse)
+library(glue)
+```
+
+```{r}
+
+laender <- c("Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen", "Nordrhein-Westfalen", "Rheinland-Pfalz", "Saarland", "Sachsen", "Sachsen-Anhalt", "Thüringen")
+
+get.cases <- function(land){
+  read_tsv("data/Germany/{land}.tsv" %>% glue(), skip = 3) %>% mutate(land=as.character("{land}" %>% glue()))
+}
+
+get.cases("Bayern") 
+```
+
+
