@@ -47,7 +47,7 @@ china.filtered <- data.jhu %>%
   group_by(date, `Country/Region`) %>%
   summarise(confirmed = sum(confirmed)) %>%
   ungroup() %>%
-  mutate(day = row_number(),  type = "historical") %>%
+  mutate(day = row_number()) %>%
   rename(name = `Country/Region`, cases = `confirmed`) %>%
   ungroup()
 
@@ -156,7 +156,7 @@ plot.detailed <- data %>%
   ) %>% 
   filter(type=="historical") %>%
   cases.timelime(.trans = "identity") +
-  coord_cartesian(xlim=c(9,24), ylim=c(3000,20000)) 
+  coord_cartesian(xlim=c(9,30), ylim=c(3000,70000)) 
   
 plot.detailed
 ```

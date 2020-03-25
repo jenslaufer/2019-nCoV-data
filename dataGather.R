@@ -52,7 +52,6 @@ load.data.bno.news <- function() {
     rename(name = `country`) %>%
     ungroup() %>%
     mutate(type = "historical") %>%
-    ungroup() %>%
     filter(date < today())
 }
 
@@ -146,4 +145,36 @@ get.data.jhu <- function() {
     write_csv("data/COVID19.csv")
   
   data
+}
+
+load.german.county.cases <- function() {
+  laender <-
+    c(
+      "Baden-Württemberg",
+      "Bayern",
+      "Berlin",
+      "Brandenburg",
+      "Bremen",
+      "Hamburg",
+      "Hessen",
+      "Mecklenburg-Vorpommern",
+      "Niedersachsen",
+      "Nordrhein-Westfalen",
+      "Rheinland-Pfalz",
+      "Saarland",
+      "Sachsen",
+      "Sachsen-Anhalt",
+      "Thüringen"
+    )
+  
+  laender %>% map( ~ .get.cases.for.county(.)) %>%
+    bind_rows() %>%
+    mutate(name = as.factor(name), type = "historical") %>%
+    rename(date = time) %>%
+    select(date, name, cases, deaths, type)
+}
+
+.get.cases.for.county <- function(land) {
+  read_tsv("data/Germany/{land}.tsv" %>% glue(), skip = 3) %>%
+    mutate(name = as.character("{land}" %>% glue()))
 }

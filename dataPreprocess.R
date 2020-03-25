@@ -1,6 +1,5 @@
 
 
-
 .add.forecast <- function(data, .name, .h = 5) {
   data %>%
     filter(name == .name) %>%
@@ -19,7 +18,7 @@
 preprocess.data <- function(data) {
   data <- data %>%
     group_by(name) %>%
-    filter(!(datetime == max(datetime) &
+    filter(!(date == max(date) &
                cases / lag(cases) == 1)) %>%
     ungroup() %>%
     bind_rows(data %>% distinct(name)

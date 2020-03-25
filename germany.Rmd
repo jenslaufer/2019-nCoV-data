@@ -12,17 +12,18 @@ knitr::opts_chunk$set(echo = F, message=F, echo = F)
 ```{r}
 library(tidyverse)
 library(glue)
+source("dataGather.R")
+source("dataPreprocess.R")
+source("visualisations.R")
 ```
 
 ```{r}
-
-laender <- c("Baden-Württemberg", "Bayern", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen", "Nordrhein-Westfalen", "Rheinland-Pfalz", "Saarland", "Sachsen", "Sachsen-Anhalt", "Thüringen")
-
-get.cases <- function(land){
-  read_tsv("data/Germany/{land}.tsv" %>% glue(), skip = 3) %>% mutate(land=as.character("{land}" %>% glue()))
-}
-
-get.cases("Bayern") 
+data <- load.german.county.cases()
+data <- data %>% preprocess.data()
 ```
 
+
+```{r fig.height=10, fig.width=20}
+data %>% cases.timelime()
+```
 
