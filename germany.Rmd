@@ -24,6 +24,33 @@ data <- data %>% preprocess.data()
 
 
 ```{r fig.height=10, fig.width=20}
-data %>% cases.timelime()
+data %>% filter(type=="historical") %>% cases.timelime()
+```
+
+```{r fig.height=10, fig.width=20}
+data %>%
+  filter(name == "Bayern" |
+           name == "Baden-Württemberg" | name == "Nordrhein-Westfalen") %>%
+  filter(type == "historical") %>%
+  cases.timelime()
+```
+```{r fig.height=10, fig.width=20}
+data %>%
+  filter(name == "Bayern" |
+           name == "Hessen" | 
+           name == "Baden-Württemberg" | 
+           name == "Nordrhein-Westfalen") %>%
+  filter(type == "historical") %>%
+  cases.timelime(.trans = "identity")
+```
+```{r fig.height=10, fig.width=20}
+
+data %>%
+  filter(
+           name == "Bremen" |
+           name == "Berlin" | 
+           name == "Hamburg" ) %>% 
+  filter(type == "historical") %>%
+  cases.timelime(.trans = "identity")
 ```
 
