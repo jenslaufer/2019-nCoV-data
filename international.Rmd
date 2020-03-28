@@ -135,7 +135,8 @@ plot.coarse <- data %>%
       name == "France" 
   ) %>% 
   filter(type=="historical") %>%
-  cases.timelime() 
+  cases.timelime() +
+  geom_abline(intercept = 0, slope=7000)
 plot.coarse
 ```
 
@@ -251,7 +252,18 @@ data %>%
 ```
 
 
+
+```{r}
+```
+
+
+```{r}
+a^4
+```
+
+
 ```{r fig.height=10, fig.width=20}
+
 data %>% 
   filter(
       name == "Germany" |
@@ -262,8 +274,22 @@ data %>%
   ) %>% 
   filter(type=="historical") %>% 
   cases.timelime(.trans="identity") %>% german()
+
 ```
 
 
+`
+```{r fig.height=10, fig.width=20}
+data %>% 
+  filter(
+      name == "Germany" |
+      name == "Spain" |
+      name == "Italy" |
+      name == "United Kingdom" |
+      name == "France" 
+  ) %>% 
+  filter(type=="historical") %>% 
+  cases.timelime(.trans="log10") 
+```
 
 

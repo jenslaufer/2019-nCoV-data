@@ -4,6 +4,11 @@
 
 
 cases.timelime <- function(data, .trans = "log10") {
+  
+  days7 <- tibble(x7=seq(1,40)) %>% mutate(y7=100*(2^(1/7))^x)
+  days30 <- tibble(x=seq(1,40)) %>% mutate(y=100*(2^(1/20))^x)
+  days3 <- tibble(x=seq(1,40)) %>% mutate(y=100*(2^(1/3))^x)
+  
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
     .palette = "Tableau 10"
@@ -12,6 +17,7 @@ cases.timelime <- function(data, .trans = "log10") {
     filter(cases > 0 & diff != 1) %>%
     ggplot(aes(x = day, y = cases, color = name)) +
     geom_line(aes(linetype = type), size = 2) +
+    geom_line(mapping = aes(x=x7, y=y7), data = days7) +
     geom_hline(yintercept = 100) +
     geom_vline(xintercept = 0) +
     scale_color_tableau(palette = .palette) +
