@@ -39,7 +39,7 @@ data <- load.data.bno.news()
 
 
 
-```{r eval=T}
+```{r eval=F}
 data.jhu <- get.data.jhu()
 china.filtered <- data.jhu %>%
   filter(`Country/Region` == "China") %>%
@@ -64,13 +64,13 @@ data %>% filter(type=="historical") %>% select(-type, -datetime) %>% write_csv("
 ```
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>%  filter(name=="Italy" & day >=0 )  %>% changes.plot("Italy")
 ```
 
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>%  filter(name=="France" & day >=0 )  %>% changes.plot("France")
   
 ```
@@ -82,18 +82,18 @@ data %>%  filter(name=="Germany" & day >=0 )  %>% changes.plot("Germany")
 
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>%  filter(name=="Spain" & day >=0 )  %>% changes.plot("Spain")
   
 ```
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>%  filter(name=="United States" & day >=0 )  %>% changes.plot("United States")
   
 ```
 
-```{r}
+```{r fig.height=10, fig.width=20}
 data %>%  filter(name=="United Kingdom" & day >=0 )  %>% changes.plot("United Kingdom")
   
 ```
@@ -120,6 +120,10 @@ data %>%
   cases.timelime()
 ```
 
+```{r}
+log(2)/log(1.1)
+```
+
 
 ```{r fig.height=10, fig.width=20}
 plot.coarse <- data %>% 
@@ -132,6 +136,7 @@ plot.coarse <- data %>%
   ) %>% 
   filter(type=="historical") %>%
   cases.timelime() 
+plot.coarse
 ```
 
 ```{r fig.height=10, fig.width=20}

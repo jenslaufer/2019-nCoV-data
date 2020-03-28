@@ -3,5 +3,5 @@
 .RData
 .Ruserdata
 *.Rproj
-
+*.png
 .pytest_cache
