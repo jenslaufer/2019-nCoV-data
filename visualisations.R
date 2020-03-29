@@ -1,25 +1,36 @@
-
-
-
-
-
 cases.timelime <- function(data, .trans = "log10") {
+  days4 <-
+    tibble(day = seq(0, 40)) %>% mutate(y4 = 100 * (2 ^ (1 / 4)) ^
+                                          day)
+  days3 <-
+    tibble(day = seq(0, 40)) %>% mutate(y3 = 100 * (2 ^ (1 / 3)) ^
+                                          day)
+  days7 <-
+    tibble(day = seq(0, 40)) %>% mutate(y7 = 100 * (2 ^ (1 / 7)) ^
+                                          day)
+  days20 <-
+    tibble(day = seq(0, 40)) %>% mutate(y20 = 100 * (2 ^ (1 / 20)) ^
+                                          day)
   
-  days7 <- tibble(x7=seq(1,40)) %>% mutate(y7=100*(2^(1/7))^x)
-  days30 <- tibble(x=seq(1,40)) %>% mutate(y=100*(2^(1/20))^x)
-  days3 <- tibble(x=seq(1,40)) %>% mutate(y=100*(2^(1/3))^x)
   
   .palette = "Tableau 20"
   if (data %>% pull(name) %>% unique() %>% length() < 10) {
     .palette = "Tableau 10"
   }
   plot <- data %>%
+    left_join(days3, by = "day") %>%
+    left_join(days4, by = "day") %>%
+    left_join(days7, by = "day") %>%
+    left_join(days20, by = "day") %>%
     filter(cases > 0 & diff != 1) %>%
     ggplot(aes(x = day, y = cases, color = name)) +
     geom_line(aes(linetype = type), size = 2) +
-    geom_line(mapping = aes(x=x7, y=y7), data = days7) +
     geom_hline(yintercept = 100) +
     geom_vline(xintercept = 0) +
+    geom_line(aes(x = day, y = y3), color = "darkgrey") +
+    geom_line(aes(x = day, y = y4), color = "darkgrey") +
+    geom_line(aes(x = day, y = y7), color = "darkgrey") +
+    geom_line(aes(x = day, y = y20), color = "darkgrey") +
     scale_color_tableau(palette = .palette) +
     scale_y_continuous(trans = .trans, label = comma) +
     scale_linetype_manual(
