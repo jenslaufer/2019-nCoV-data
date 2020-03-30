@@ -1,5 +1,7 @@
 
 
+
+
 .add.forecast <- function(data, .name, .h = 5) {
   data %>%
     filter(name == .name) %>%
@@ -46,6 +48,7 @@ preprocess.data <- function(data) {
   data <- data %>%
     group_by(name) %>%
     mutate(diff = cases / lag(cases)) %>%
+    mutate(double.time = log10(2) / log10(diff)) %>%
     ungroup()
   
   data

@@ -75,7 +75,17 @@ data %>%  filter(name=="France" & day >=0 )  %>% changes.plot("France")
   
 ```
 
+
+
+```{r fig.height=10, fig.width=20}
+data %>% 
+  filter(name=="Germany" & day >= 0) 
+```
+
+
+
 ```{r fig.width=20}
+
 data %>%  filter(name=="Germany" & day >=0 )  %>% changes.plot("Germany")
   
 ```

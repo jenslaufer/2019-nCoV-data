@@ -175,6 +175,6 @@ load.german.county.cases <- function() {
 }
 
 .get.cases.for.county <- function(land) {
-  read_tsv("data/Germany/{land}.tsv" %>% glue(), skip = 3) %>%
+  read_tsv("data/Germany/DEU-{land}.tsv" %>% glue(), skip = 3) %>%
     mutate(name = as.character("{land}" %>% glue()))
 }
