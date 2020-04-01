@@ -164,6 +164,7 @@ load.german.county.cases <- function() {
       "Saarland",
       "Sachsen",
       "Sachsen-Anhalt",
+      "Schleswig-Holstein",
       "Thüringen"
     )
   

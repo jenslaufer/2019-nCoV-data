@@ -10,15 +10,6 @@ knitr::opts_chunk$set(echo = F, message = F, warning = F)
 ```
 
 ```{r}
-library(tidyverse)
-library(bbplot)
-library(ggthemes)
-library(ggrepel)
-library(scales)
-library(glue)
-library(tsbox)
-library(forecast)
-
 source("dataGather.R")
 source("dataPreprocess.R")
 source("visualisations.R")
@@ -76,11 +67,6 @@ data %>%  filter(name=="France" & day >=0 )  %>% changes.plot("France")
 ```
 
 
-
-```{r fig.height=10, fig.width=20}
-data %>% 
-  filter(name=="Germany" & day >= 0) 
-```
 
 
 
@@ -300,5 +286,26 @@ data %>%
   filter(type=="historical") %>% 
   cases.timelime(.trans="log10") 
 ```
+
+
+
+
+```{r}
+data %>% 
+  filter(type=="historical") %>% 
+  group_by(name) %>% 
+  mutate(week=(1 + as.numeric(date - min(date)) %/% 7)) %>% 
+  ungroup() %>% 
+  arrange(name) %>% 
+  group_by(name, week) %>% 
+  slice(n()) %>% 
+  ungroup() %>% 
+  group_by(name) %>% 
+  mutate(diff=cases/dplyr::lag(cases)) %>% 
+  mutate(double.time=log10(2)/log10(diff)*7) %>% 
+  filter(name=="Germany")
+```
+
+
 
 

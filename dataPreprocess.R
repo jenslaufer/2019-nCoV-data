@@ -1,6 +1,13 @@
-
-
-
+library(tsbox)
+library(forecast)
+library(tidyverse)
+library(bbplot)
+library(ggthemes)
+library(ggrepel)
+library(scales)
+library(glue)
+library(tsbox)
+library(forecast)
 
 .add.forecast <- function(data, .name, .h = 5) {
   data %>%
