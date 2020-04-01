@@ -303,7 +303,7 @@ data %>%
   group_by(name) %>% 
   mutate(diff=cases/dplyr::lag(cases)) %>% 
   mutate(double.time=log10(2)/log10(diff)*7) %>% 
-  filter(name=="Germany")
+  filter(name=="France")
 ```
 
 
