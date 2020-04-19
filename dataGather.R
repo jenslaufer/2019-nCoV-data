@@ -4,6 +4,16 @@ library(lubridate)
 
 PYTHON.PATH <- "/home/jens/anaconda3/bin/python"
 
+
+load.mobility.google <- function() {
+  filename <- "data/google_mobitilty.csv"
+  download.file(
+    "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv",
+    filename
+  )
+  read_csv(filename)
+}
+
 load.hospital.beds <- function() {
   read_csv("data/hospital_beds.csv") %>%
     select(-`Series Name`,-`Series Code`,-`Country Code`) %>%

@@ -1,0 +1,90 @@
+---
+title: "Google Mobilty"
+author: "Jens Laufer"
+date: "19 4 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r}
+library(ggthemes)
+source("dataGather.R")
+
+```
+
+```{r}
+mobility.data <- load.mobility.google()
+```
+
+
+
+
+## Checking for missing values 
+
+
+
+```{r}
+
+mobility.data %>% 
+  mutate(row=row_number()) %>% 
+  gather(-row, key = "feature", value = "value") %>% 
+  mutate(is_nan=is.na(value)) %>% 
+  group_by(feature) %>% 
+  mutate(total=n()) %>% 
+  group_by(feature, is_nan, total) %>% 
+  summarise(n=n()) %>%
+  mutate(ratio=n/total) %>% 
+  ungroup() %>% 
+  select(-total, -n) %>% 
+  ggplot(aes(x=feature, y=ratio, fill=is_nan)) +
+  geom_bar(stat = "identity") +
+  scale_fill_tableau() +
+  coord_flip()
+  
+```
+
+```{r fig.height=100, fig.width=100}
+
+mobility.data %>% 
+  mutate(row=row_number()) %>% 
+  gather(-row, key = "feature", value = "value") %>% 
+  mutate(is_nan=is.na(value), feature=as.factor(feature)) %>% 
+  select(row, feature, is_nan) %>% 
+  ggplot(aes(x=feature, y=row, fill=is_nan)) +
+  geom_raster() +
+  scale_fill_tableau() +
+  coord_flip()
+```
+
+
+# Univariate Analysis
+
+
+```{r fig.height=10, fig.width=20}
+mobility.data %>% 
+  select_if(is.numeric) %>% 
+  gather(key = "feature", value = "value") %>% 
+  ggplot(aes(x='', y=value)) +
+  geom_boxplot() +
+  facet_wrap(~feature) +
+  scale_y_log10()
+```
+
+```{r}
+mobility.data %>% 
+  filter(transit_stations_percent_change_from_baseline > 70) %>% 
+  select(country_region, sub_region_1, sub_region_2, transit_stations_percent_change_from_baseline, date)
+```
+
+
+
+
+```{r}
+mobility.data %>% 
+  select(date) %>% 
+  distinct()
+```
+

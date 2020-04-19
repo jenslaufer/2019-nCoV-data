@@ -53,4 +53,19 @@ data %>%
   filter(type == "historical") %>%
   cases.timelime(.trans = "identity")
 ```
+```{r}
+
+data %>% 
+  filter(type=="historical") %>% 
+  group_by(name) %>% 
+  mutate(week=(1 + as.numeric(date - min(date)) %/% 7)) %>% 
+  ungroup() %>% 
+  arrange(name) %>% 
+  group_by(name, week) %>% 
+  slice(n()) %>% 
+  ungroup() %>% 
+  group_by(name) %>% 
+  mutate(diff=cases/dplyr::lag(cases)) %>% 
+  mutate(double.time=log10(2)/log10(diff)*7)
+```
 
