@@ -115,10 +115,8 @@ mobility.data %>%
   ) %>%
   ggplot(aes(x = date, y = fit, color =
                country_region)) +
-  geom_smooth(aes(x = date, y = overall_percent_change_from_baseline, color =
-                    country_region),
-              se = F) +
-  geom_line() +
+  geom_line(aes(y = overall_percent_change_from_baseline)) +
+  geom_line(size=2) +
   geom_hline(yintercept = 0) +
   scale_color_tableau() +
   scale_x_date(date_breaks = "2 day") +
@@ -169,6 +167,7 @@ models <- confirmed %>%
 models %>% 
   select(-mdl) %>% 
   unnest() %>% 
+
   filter(
       country_region == "France" |
         country_region == "Germany" |
@@ -177,13 +176,16 @@ models %>%
         country_region == "Italy" |
         country_region == "United States") %>% 
   group_by(country_region) %>% 
+  filter(country_region == "Italy") %>% 
   ggplot(aes(x=date, y=fit, color=country_region)) +
-  geom_line() + 
+  geom_line(size=2) + 
+  geom_line(aes(y=diff)) +
   scale_color_tableau() +
   scale_x_date(date_breaks = "2 day") +
   facet_wrap( ~ country_region, scales="free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
 
 
 
