@@ -73,8 +73,91 @@ mobility.data %>%
 ## Multivariate Analysis
 
 
+
+
+
+```{r fig.height=10, fig.width=20}
+mobility.data %>%
+  mutate(
+    timestamp = as.numeric(as.POSIXct(date)),
+    overall_percent_change_from_baseline = (
+      retail_and_recreation_percent_change_from_baseline + grocery_and_pharmacy_percent_change_from_baseline + parks_percent_change_from_baseline + transit_stations_percent_change_from_baseline + workplaces_percent_change_from_baseline + residential_percent_change_from_baseline
+    ) / 6
+  ) %>%
+  select(
+    country_region,
+    date,
+    timestamp,
+    overall_percent_change_from_baseline,
+    sub_region_1
+  ) %>%
+  filter(!is.na(overall_percent_change_from_baseline)) %>%
+  group_by(country_region) %>%
+  nest() %>%
+  mutate(mdl = map(
+    data,
+    ~ loess(overall_percent_change_from_baseline ~ timestamp, data = .)
+  ),
+  fit = map(mdl, `[[`, "fitted")) %>%
+  ungroup() %>%
+  select(-mdl) %>%
+  unnest() %>%
+  filter(
+    (
+      country_region == "France" |
+        country_region == "Germany" |
+        country_region == "Spain" |
+        country_region == "United Kingdom" |
+        country_region == "Italy" |
+        country_region == "United States"
+    ) & !is.na(sub_region_1)
+    
+  ) %>%
+  ggplot(aes(x = date, y = fit, color =
+               country_region)) +
+  geom_smooth(aes(x = date, y = overall_percent_change_from_baseline, color =
+                    country_region),
+              se = F) +
+  geom_line() +
+  geom_hline(yintercept = 0) +
+  scale_color_tableau() +
+  scale_x_date(date_breaks = "2 day") +
+  facet_wrap(~ country_region) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+
+
 ```{r}
-mobility.data %>% glimpse()
+source("dataGather.R")
+source("dataPreprocess.R")
+```
+
+```{r}
+confirmed <- load.data.bno.news() %>% 
+  preprocess.data() %>% 
+  filter(type=="historical") %>% 
+  select(name, date, diff) %>% 
+  rename(country_region=name) %>% 
+  na.omit() %>% 
+  filter(!is.infinite(diff))
+```
+
+
+
+
+
+
+```{r}
+models <- confirmed %>%
+  mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
+  group_by(country_region) %>%
+  nest() %>%
+  mutate(mdl = map(data, ~ loess(diff ~ timestamp, data = .))) %>%
+  mutate(fit = map(mdl, `[[`, "fitted")) %>% 
+  ungroup()
 ```
 
 
@@ -83,24 +166,24 @@ mobility.data %>% glimpse()
 
 
 ```{r fig.height=10, fig.width=20}
-mobility.data %>%
-  mutate(
-    overall_percent_change_from_baseline = (
-      retail_and_recreation_percent_change_from_baseline + grocery_and_pharmacy_percent_change_from_baseline + parks_percent_change_from_baseline + transit_stations_percent_change_from_baseline + workplaces_percent_change_from_baseline + residential_percent_change_from_baseline
-    ) / 6
-  ) %>%
+models %>% 
+  select(-mdl) %>% 
+  unnest() %>% 
   filter(
-    country_region == "France" |
-      country_region == "Germany" |
-      country_region == "Spain" |
-      country_region == "United Kingdom" | country_region == "Italy" | country_region=="United States"
-  ) %>% 
-  ggplot(aes(x=date, y=overall_percent_change_from_baseline, color=country_region)) +
-  geom_smooth(se=F) +
+      country_region == "France" |
+        country_region == "Germany" |
+        country_region == "Spain" |
+        country_region == "United Kingdom" |
+        country_region == "Italy" |
+        country_region == "United States") %>% 
+  group_by(country_region) %>% 
+  ggplot(aes(x=date, y=fit, color=country_region)) +
+  geom_line() + 
   scale_color_tableau() +
-  scale_x_date(date_breaks = "1 day") +
-  facet_wrap(~country_region) +
-  theme(axis.text.x = element_text(angle = 45))
+  scale_x_date(date_breaks = "2 day") +
+  facet_wrap( ~ country_region, scales="free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
+
 
 
