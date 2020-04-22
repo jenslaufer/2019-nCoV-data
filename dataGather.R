@@ -11,7 +11,7 @@ load.mobility.google <- function() {
     "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv",
     filename
   )
-  read_csv(filename)
+  read_csv(filename) 
 }
 
 load.hospital.beds <- function() {
