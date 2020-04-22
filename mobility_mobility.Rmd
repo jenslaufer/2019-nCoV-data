@@ -247,7 +247,7 @@ diff.mobility.scatter.plot <- function(data) {
 
 
 
-```{r}
+```{r fig.height=10, fig.width=20}
 seq(0,30,1) %>% 
   map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
   bind_rows() %>% 
@@ -257,5 +257,18 @@ seq(0,30,1) %>%
   ggplot(aes(x=lag, y=cor)) +
   geom_line() +
   facet_wrap(~country_region)
+```
+```{r}
+seq(0,30,1) %>% 
+  map(~lag.data(confirmed, mobility.data, .)) %>% 
+  bind_rows() %>% 
+  group_by(country_region, lag) %>% 
+  summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
+  ungroup() %>% 
+  group_by(country_region) %>% 
+  arrange(country_region, desc(cor)) %>% 
+  slice(1:1) %>% 
+  pull(lag) %>% 
+  IQR()
 ```
 
