@@ -123,7 +123,7 @@ mobility.data %>%
   geom_hline(yintercept = 0) +
   scale_color_tableau() +
   scale_x_date(date_breaks = "2 day") +
-  facet_wrap(~ country_region) +
+  facet_wrap(~ country_region, scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
@@ -253,22 +253,52 @@ seq(0,30,1) %>%
   bind_rows() %>% 
   group_by(country_region, lag) %>% 
   summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
-  ungroup() %>% 
-  ggplot(aes(x=lag, y=cor)) +
+  nest() %>%
+  mutate(mdl = map(
+    data,
+    ~ loess(cor ~ lag, data = .)
+  ),
+  fit = map(mdl, `[[`, "fitted")) %>%
+  select(-mdl) %>% 
+  unnest() %>% 
+  ggplot(aes(x=lag, y=cor, color=country_region)) +
   geom_line() +
+  geom_line(aes(y=fit), size=2) +
   facet_wrap(~country_region)
 ```
-```{r}
+
 seq(0,30,1) %>% 
-  map(~lag.data(confirmed, mobility.data, .)) %>% 
+  map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
   bind_rows() %>% 
   group_by(country_region, lag) %>% 
   summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
+  nest() %>%
+  mutate(mdl = map(
+    data,
+    ~ loess(cor ~ lag, data = .)
+  ),
+  fit = map(mdl, `[[`, "fitted")) %>%
+  select(-mdl) %>% 
+  unnest()
+```{r}
+seq(0,30,1) %>% 
+  map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
+  bind_rows() %>% 
+  group_by(country_region, lag) %>% 
+  summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
+  nest() %>%
+  mutate(mdl = map(
+    data,
+    ~ loess(cor ~ lag, data = .)
+  ),
+  fit = map(mdl, `[[`, "fitted")) %>%
+  select(-mdl) %>% 
+  unnest() %>%  
   ungroup() %>% 
   group_by(country_region) %>% 
-  arrange(country_region, desc(cor)) %>% 
-  slice(1:1) %>% 
-  pull(lag) %>% 
-  IQR()
+  arrange(country_region, desc(fit)) %>% 
+  slice(1:1)  %>% 
+  group_by() %>% 
+  summarise(mean=mean(lag), median=median(lag))
 ```
 
