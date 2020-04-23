@@ -64,3 +64,28 @@ german <- function(plot) {
   plot +
     labs(title = "Bestätigte COVID-19 Fälle", subtitle = "Fallzahlen an einem bestimmten Tag nach Erreichen von 100 Fällen")
 }
+
+plot.model.data <-
+  function(data,
+           .fit.feature = "fit",
+           .feature1,
+           .feature2,
+           is.date = T) {
+    plot <- data %>%
+      ggplot(aes(
+        x = !!sym(.feature1),
+        y = !!sym(.fit.feature),
+        color =
+          country_region
+      )) +
+      geom_line(aes(y = !!sym(.feature2))) +
+      geom_line(size = 2) +
+      geom_hline(yintercept = 0) +
+      scale_color_tableau()  +
+      facet_wrap(~ country_region, scales = "free") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    if (is.date) {
+      plot + scale_x_date(date_breaks = "2 day")
+    }
+    plot
+  }

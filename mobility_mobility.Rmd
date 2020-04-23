@@ -15,6 +15,7 @@ library(glue)
 library(ggthemes)
 source("dataGather.R")
 source("dataPreprocess.R")
+source("visualisations.R")
 ```
 
 ```{r}
@@ -86,10 +87,15 @@ mobility.data <- preprocess.mobility.data(mobility.data)
 
 
 
-```{r fig.height=10, fig.width=20}
+```{r}
+mobility.data.model.data <- (
+  mobility.data %>%
+    group_by(country_region, sub_region_1) %>%
+    fit.loess.model("overall_percent_change_from_baseline", "timestamp")
+)$data
+```
 
-mobility.data.model.data <- (mobility.data %>% 
-    group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline", "timestamp"))$data
+```{r  fig.height=10, fig.width=20}
 mobility.data.model.data %>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
@@ -102,17 +108,9 @@ mobility.data.model.data %>%
       country_region == "Sweden" |
       country_region == "United States"
   ) %>%
-  ggplot(aes(x = date, y = fit, color =
-               country_region)) +
-  geom_line(aes(y = overall_percent_change_from_baseline)) +
-  geom_line(size = 2) +
-  geom_hline(yintercept = 0) +
-  scale_color_tableau() +
-  scale_x_date(date_breaks = "2 day") +
-  facet_wrap( ~ country_region, scales = "free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  plot.model.data(.feature1 = "date", .feature2 = "overall_percent_change_from_baseline")
 ```
+
 
 
 
@@ -182,9 +180,17 @@ mobility.chg <- mobility.data %>%
 
 ```{r fig.height=10, fig.width=20}
 
+
 corr.data.model <- (
   seq(0, 30, 1) %>%
-    map( ~ lag.data(filtered.confimed, filtered.mobility, ., "overall_percent_change_from_baseline")) %>%
+    map(
+      ~ lag.data(
+        filtered.confimed,
+        filtered.mobility,
+        .,
+        "overall_percent_change_from_baseline"
+      )
+    ) %>%
     bind_rows() %>%
     group_by(country_region, lag) %>%
     summarise(cor = cor(
@@ -194,11 +200,7 @@ corr.data.model <- (
 )$data
 
 corr.data.model %>%
-  ggplot(aes(x = lag, y = cor, color = country_region)) +
-  geom_line() +
-  geom_line(aes(y = fit), size = 2) +
-  facet_wrap( ~ country_region) +
-  scale_color_tableau()
+  plot.model.data(.feature1 = "lag", .feature2 = "cor", is.date=F)
 ```
 
 
@@ -224,6 +226,23 @@ seq(0,30,1) %>%
   geom_jitter(alpha=0.3)
 ```
 
+
+```{r fig.height=10, fig.width=20}
+cases.model.data %>%
+  filter(
+    country_region == "France" |
+      country_region == "Germany" |
+      country_region == "Spain" |
+      country_region == "United Kingdom" |
+      country_region == "Italy" |
+      country_region == "Sweden" |
+      country_region == "United States"
+  ) %>%
+  group_by(country_region) %>%
+  plot.model.data(.feature1 = "date", .feature2 = "diff")
+```
+
+
 ```{r fig.height=10, fig.width=20}
 mobility.data.model.data %>% 
   mutate(date=date+14)%>%
@@ -247,23 +266,30 @@ mobility.data.model.data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-```{r fig.height=10, fig.width=20}
-cases.model.data %>% 
-  filter(
-      country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "Sweden" |
-        country_region == "United States") %>% 
-  group_by(country_region) %>% 
-  ggplot(aes(x=date, y=fit, color=country_region)) +
-  geom_line(size=2) + 
-  geom_line(aes(y=diff)) +
-  scale_color_tableau() +
-  scale_x_date(date_breaks = "2 day") +
-  facet_wrap( ~ country_region, scales="free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```{r}
+mobility.data.model.data <-
+  (
+    mobility.data %>% filter(
+      !is.na(overall_percent_change_from_baseline_diff) &
+        !is.infinite(overall_percent_change_from_baseline_diff)
+    ) %>%
+      group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline_diff", "timestamp")
+  )$data
 ```
 
+```{r  fig.height=10, fig.width=20}
+mobility.data.model.data %>%
+  filter(!is.na(overall_percent_change_from_baseline) &
+           is.na(sub_region_1)) %>%
+  filter(
+    country_region == "France" |
+      country_region == "Germany" |
+      country_region == "Spain" |
+      country_region == "United Kingdom" |
+      country_region == "Italy" |
+      country_region == "Sweden" |
+      country_region == "United States"
+  ) %>%
+  plot.model.data(.feature1 = "date", .feature2 = "overall_percent_change_from_baseline_diff")
+```
