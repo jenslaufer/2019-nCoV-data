@@ -74,12 +74,12 @@ plot.model.data <-
     plot <- data %>%
       ggplot(aes(
         x = !!sym(.feature1),
-        y = !!sym(.fit.feature),
+        y = !!sym(.feature2),
         color =
           country_region
       )) +
-      geom_line(aes(y = !!sym(.feature2))) +
-      geom_line(size = 2) +
+      geom_line(aes(y = !!sym(.fit.feature)), size = 2) +
+      geom_line() +
       geom_hline(yintercept = 0) +
       scale_color_tableau() +
       facet_wrap(~ country_region, scales = "free") +
