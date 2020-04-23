@@ -33,7 +33,7 @@ preprocess.data <- function(data) {
     bind_rows(data %>% distinct(name)
               %>%
                 pull(name) %>%
-                map(~ .add.forecast(data, (.), 7))) %>%
+                map( ~ .add.forecast(data, (.), 7))) %>%
     group_by(name) %>%
     mutate(day = row_number()) %>%
     ungroup()
@@ -60,3 +60,38 @@ preprocess.data <- function(data) {
   
   data
 }
+
+
+preprocess.mobility.data <- function(data) {
+  data %>%
+    select(-sub_region_2) %>%
+    mutate(
+      timestamp = as.numeric(as.POSIXct(date)),
+      overall_percent_change_from_baseline = (
+        retail_and_recreation_percent_change_from_baseline + grocery_and_pharmacy_percent_change_from_baseline + parks_percent_change_from_baseline + transit_stations_percent_change_from_baseline + workplaces_percent_change_from_baseline + residential_percent_change_from_baseline
+      ) / 6
+    )
+}
+
+fit.loess.model <-
+  function(data,
+           .feature1,
+           .feature2) {
+    models <- data %>%
+      filter(!is.na(!!sym(.feature1))) %>%
+      mutate(num = n()) %>%
+      filter(num > 1) %>%
+      select(-num) %>%
+      nest() %>%
+      mutate(mdl = map(data,
+                       ~ loess(
+                         !!sym(.feature1) ~ !!sym(.feature2), data = .
+                       )),
+             fit = map(mdl, `[[`, "fitted")) %>%
+      ungroup()
+    
+    list(
+      "data" = models %>% select(-mdl) %>% unnest(),
+      "models" = models %>% select(country_region, mdl)
+    )
+  }

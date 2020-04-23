@@ -48,9 +48,8 @@ mobility.data %>%
   scale_fill_tableau() +
   coord_flip()
 
-mobility.data <- mobility.data %>% select(-sub_region_2)
-  
 ```
+
 
 
 
@@ -72,58 +71,38 @@ mobility.data %>%
 
 ## Multivariate Analysis
 
+
+
 ```{r}
-mobility.data <- mobility.data  %>%
-  mutate(
-    timestamp = as.numeric(as.POSIXct(date)),
-    overall_percent_change_from_baseline = (
-      retail_and_recreation_percent_change_from_baseline + grocery_and_pharmacy_percent_change_from_baseline + parks_percent_change_from_baseline + transit_stations_percent_change_from_baseline + workplaces_percent_change_from_baseline + residential_percent_change_from_baseline
-    ) / 6
-  ) 
+mobility.data <- preprocess.mobility.data(mobility.data) 
 ```
 
 
-
-
 ```{r fig.height=10, fig.width=20}
-mobility.data %>%
-  select(
-    country_region,
-    date,
-    timestamp,
-    overall_percent_change_from_baseline,
-    sub_region_1
-  ) %>%
-  filter(!is.na(overall_percent_change_from_baseline) & is.na(sub_region_1)) %>%
-  group_by(country_region) %>%
-  nest() %>%
-  mutate(mdl = map(
-    data,
-    ~ loess(overall_percent_change_from_baseline ~ timestamp, data = .)
-  ),
-  fit = map(mdl, `[[`, "fitted")) %>%
-  ungroup() %>%
-  select(-mdl) %>%
-  unnest() %>%
+
+source("dataPreprocess.R")
+loess.model <- (mobility.data %>% 
+    group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline", ))$data
+loess.model %>%
+  filter(!is.na(overall_percent_change_from_baseline) &
+           is.na(sub_region_1)) %>%
   filter(
-    
-      country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "United States"
-    
-    
+    country_region == "France" |
+      country_region == "Germany" |
+      country_region == "Spain" |
+      country_region == "United Kingdom" |
+      country_region == "Italy" |
+      country_region == "Sweden" |
+      country_region == "United States"
   ) %>%
   ggplot(aes(x = date, y = fit, color =
                country_region)) +
   geom_line(aes(y = overall_percent_change_from_baseline)) +
-  geom_line(size=2) +
+  geom_line(size = 2) +
   geom_hline(yintercept = 0) +
   scale_color_tableau() +
   scale_x_date(date_breaks = "2 day") +
-  facet_wrap(~ country_region, scales = "free") +
+  facet_wrap( ~ country_region, scales = "free") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
@@ -160,26 +139,6 @@ models <- confirmed %>%
 
 
 
-```{r fig.height=10, fig.width=20}
-models %>% 
-  select(-mdl) %>% 
-  unnest() %>% 
-  filter(
-      country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "United States") %>% 
-  group_by(country_region) %>% 
-  ggplot(aes(x=date, y=fit, color=country_region)) +
-  geom_line(size=2) + 
-  geom_line(aes(y=diff)) +
-  scale_color_tableau() +
-  scale_x_date(date_breaks = "2 day") +
-  facet_wrap( ~ country_region, scales="free") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
 
 
@@ -204,19 +163,6 @@ filtered.mobility <- mobility.data %>%
         country_region == "Italy" |
         country_region == "United States") & is.na(sub_region_1)) %>% 
   select(country_region, date, overall_percent_change_from_baseline) 
-```
-
-```{r}
-# filtered.confimed <- confirmed %>% 
-#   filter(
-#         country_region == "Germany" ) 
-```
-
-```{r}
-# filtered.mobility <- mobility.data %>% 
-#   filter(
-#       (country_region == "Germany" ) & is.na(sub_region_1)) %>% 
-#   select(country_region, date, overall_percent_change_from_baseline) 
 ```
 
 
@@ -244,6 +190,22 @@ diff.mobility.scatter.plot <- function(data) {
 ```
 
 
+I filter all countries with significant decrease in mobility:
+
+```{r}
+mobility.chg <- mobility.data %>% 
+  filter(is.na(sub_region_1) & !is.na(overall_percent_change_from_baseline)) %>% 
+  select(country_region, date, overall_percent_change_from_baseline) %>% 
+  arrange(country_region, -overall_percent_change_from_baseline) %>% 
+  group_by(country_region) %>% 
+  slice(1:1,n():n()) %>% 
+  mutate(chg=overall_percent_change_from_baseline-lag(overall_percent_change_from_baseline)) %>% 
+  na.omit() %>% 
+  select(country_region, chg) %>% 
+  arrange(chg) %>% 
+  filter(chg < -70)
+  
+```
 
 
 
@@ -267,38 +229,78 @@ seq(0,30,1) %>%
   facet_wrap(~country_region)
 ```
 
-seq(0,30,1) %>% 
-  map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
-  bind_rows() %>% 
-  group_by(country_region, lag) %>% 
-  summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
-  nest() %>%
-  mutate(mdl = map(
-    data,
-    ~ loess(cor ~ lag, data = .)
-  ),
-  fit = map(mdl, `[[`, "fitted")) %>%
-  select(-mdl) %>% 
-  unnest()
+```{r}
+mobility.chg
+```
+
+
+
 ```{r}
 seq(0,30,1) %>% 
-  map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
+  map(~lag.data(confirmed %>% inner_join(mobility.chg), mobility.data %>% inner_join(mobility.chg), .)) %>% 
   bind_rows() %>% 
   group_by(country_region, lag) %>% 
   summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
-  nest() %>%
-  mutate(mdl = map(
-    data,
-    ~ loess(cor ~ lag, data = .)
-  ),
-  fit = map(mdl, `[[`, "fitted")) %>%
-  select(-mdl) %>% 
-  unnest() %>%  
+  # nest() %>%
+  # mutate(mdl = map(
+  #   data,
+  #   ~ loess(cor ~ lag, data = .)
+  # ),
+  # fit = map(mdl, `[[`, "fitted")) %>%
+  # select(-mdl) %>% 
+  # unnest() %>%  
   ungroup() %>% 
   group_by(country_region) %>% 
-  arrange(country_region, desc(fit)) %>% 
+  arrange(country_region, -cor) %>% 
   slice(1:1)  %>% 
-  group_by() %>% 
-  summarise(mean=mean(lag), median=median(lag))
+  ungroup() %>% 
+  ggplot(aes(x="", y=lag)) +
+  geom_boxplot() +
+  geom_jitter(alpha=0.3)
+```
+
+```{r fig.height=10, fig.width=20}
+mobility.data %>% 
+  mutate(date=date+14)%>%
+  filter(!is.na(overall_percent_change_from_baseline) & is.na(sub_region_1)) %>% 
+  filter(
+    
+      country_region == "France" |
+        country_region == "Germany" |
+        country_region == "Spain" |
+        country_region == "United Kingdom" |
+        country_region == "Italy" |
+        country_region == "Sweden" |
+        country_region == "United States"
+    
+    
+  ) %>% 
+  ggplot(aes(x=date, y=overall_percent_change_from_baseline))+
+  geom_line()+
+  facet_wrap(~country_region,  scales="free") +
+  scale_x_date(date_breaks = "2 day") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r fig.height=10, fig.width=20}
+models %>% 
+  select(-mdl) %>% 
+  unnest() %>% 
+  filter(
+      country_region == "France" |
+        country_region == "Germany" |
+        country_region == "Spain" |
+        country_region == "United Kingdom" |
+        country_region == "Italy" |
+        country_region == "Sweden" |
+        country_region == "United States") %>% 
+  group_by(country_region) %>% 
+  ggplot(aes(x=date, y=fit, color=country_region)) +
+  geom_line(size=2) + 
+  geom_line(aes(y=diff)) +
+  scale_color_tableau() +
+  scale_x_date(date_breaks = "2 day") +
+  facet_wrap( ~ country_region, scales="free") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
