@@ -81,8 +81,8 @@ plot.model.data <-
       geom_line(aes(y = !!sym(.feature2))) +
       geom_line(size = 2) +
       geom_hline(yintercept = 0) +
-      scale_color_tableau()
-    facet_wrap( ~ country_region, scales = "free") +
+      scale_color_tableau() +
+      facet_wrap(~ country_region, scales = "free") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     if (is.date) {
       plot <- plot + scale_x_date(date_breaks = "2 day")
