@@ -291,3 +291,15 @@ mobility.data.model.data %>%
   ) %>%
   plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
+
+```{r}
+mobility.data.model.data %>%
+  arrange(country_region, sub_region_1, date) %>% 
+  select(country_region, sub_region_1, overall_percent_change_from_baseline, overall_percent_change_from_baseline_diff) %>% 
+  mutate(lag=overall_percent_change_from_baseline/lag(abs(overall_percent_change_from_baseline))) 
+```
+
+```{r}
+5/8
+```
+

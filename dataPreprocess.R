@@ -33,7 +33,7 @@ preprocess.data <- function(data) {
     bind_rows(data %>% distinct(name)
               %>%
                 pull(name) %>%
-                map( ~ .add.forecast(data, (.), 7))) %>%
+                map(~ .add.forecast(data, (.), 7))) %>%
     group_by(name) %>%
     mutate(day = row_number()) %>%
     ungroup()
@@ -72,7 +72,7 @@ preprocess.mobility.data <- function(data) {
       ) / 6
     ) %>%
     mutate_if(str_detect(names(.), "change_from_baseline"),
-              funs(diff = (.) / lag(.)))
+              funs(diff = (.) / lag(abs(.))))
 }
 
 fit.loess.model <-
