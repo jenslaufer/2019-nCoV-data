@@ -280,6 +280,7 @@ mobility.data.model.data <-
 mobility.data.model.data %>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
+  mutate(!!feature:=-!!sym(feature), fit=-fit) %>% 
   filter(
     country_region == "France" |
       country_region == "Germany" |
@@ -293,4 +294,32 @@ mobility.data.model.data %>%
 ```
 
 
+
+
+```{r fig.height=10, fig.width=20}
+
+source("visualisations.R")
+feature <- "overall_percent_change_from_baseline"
+mobility.data.model.data <- (
+  mobility.data %>%
+    group_by(country_region, sub_region_1) %>%
+    fit.loess.model(feature, "timestamp")
+)$data
+mobility.data.model.data %>% 
+  mutate(date=date+14)%>%
+  filter(!is.na(overall_percent_change_from_baseline) & is.na(sub_region_1)) %>% 
+  filter(
+    
+      country_region == "France" |
+        country_region == "Germany" |
+        country_region == "Spain" |
+        country_region == "United Kingdom" |
+        country_region == "Italy" |
+        country_region == "Sweden" |
+        country_region == "United States"
+    
+    
+  ) %>% 
+  plot.model.data(.feature1 = "date", .feature2 = feature)
+```
 
