@@ -101,7 +101,7 @@ fit.loess.model <-
 
 
 lag.data <-
-  function(cases, mobility, .lag, feature) {
+  function(cases, mobility, .lag, .feature) {
     cases %>%
       inner_join(mobility) %>%
       mutate(lag = as.integer(.lag)) %>%
