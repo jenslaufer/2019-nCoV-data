@@ -88,10 +88,11 @@ mobility.data <- preprocess.mobility.data(mobility.data)
 
 
 ```{r}
+feature <- "overall_percent_change_from_baseline"
 mobility.data.model.data <- (
   mobility.data %>%
     group_by(country_region, sub_region_1) %>%
-    fit.loess.model("overall_percent_change_from_baseline", "timestamp")
+    fit.loess.model(feature, "timestamp")
 )$data
 ```
 
@@ -108,7 +109,7 @@ mobility.data.model.data %>%
       country_region == "Sweden" |
       country_region == "United States"
   ) %>%
-  plot.model.data(.feature1 = "date", .feature2 = "overall_percent_change_from_baseline")
+  plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
 
 
@@ -259,22 +260,19 @@ mobility.data.model.data %>%
     
     
   ) %>% 
-  ggplot(aes(x=date, y=fit))+
-  geom_line()+
-  facet_wrap(~country_region,  scales="free") +
-  scale_x_date(date_breaks = "2 day") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
 
 
 ```{r}
+feature <- "overall_percent_change_from_baseline_diff"
 mobility.data.model.data <-
   (
     mobility.data %>% filter(
       !is.na(overall_percent_change_from_baseline_diff) &
         !is.infinite(overall_percent_change_from_baseline_diff)
     ) %>%
-      group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline_diff", "timestamp")
+      group_by(country_region, sub_region_1) %>% fit.loess.model(feature, "timestamp")
   )$data
 ```
 
@@ -291,5 +289,5 @@ mobility.data.model.data %>%
       country_region == "Sweden" |
       country_region == "United States"
   ) %>%
-  plot.model.data(.feature1 = "date", .feature2 = "overall_percent_change_from_baseline_diff")
+  plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
