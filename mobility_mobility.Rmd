@@ -80,9 +80,8 @@ mobility.data <- preprocess.mobility.data(mobility.data)
 
 ```{r fig.height=10, fig.width=20}
 
-source("dataPreprocess.R")
 loess.model <- (mobility.data %>% 
-    group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline", ))$data
+    group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline", "timestamp"))$data
 loess.model %>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
@@ -125,13 +124,8 @@ confirmed <- load.data.bno.news() %>%
 
 
 ```{r}
-models <- confirmed %>%
-  mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
-  group_by(country_region) %>%
-  nest() %>%
-  mutate(mdl = map(data, ~ loess(diff ~ timestamp, data = .))) %>%
-  mutate(fit = map(mdl, `[[`, "fitted")) %>% 
-  ungroup()
+model.data <-  (confirmed %>% mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
+  group_by(country_region) %>% fit.loess.model("diff", "timestamp"))$data
 ```
 
 
@@ -143,7 +137,7 @@ models <- confirmed %>%
 
 
 ```{r}
-filtered.confimed <- confirmed %>% 
+filtered.confimed <- model.data %>% 
   filter(
       country_region == "France" |
         country_region == "Germany" |
@@ -167,8 +161,8 @@ filtered.mobility <- mobility.data %>%
 
 
 ```{r}
-lag.data <- function(confirmed, mobility, .lag) {
-  confirmed %>%
+lag.data <- function(data, mobility, .lag) {
+  data %>%
     inner_join(mobility) %>%
     mutate(lag=as.integer(.lag)) %>% 
     group_by(country_region) %>%
@@ -241,14 +235,6 @@ seq(0,30,1) %>%
   bind_rows() %>% 
   group_by(country_region, lag) %>% 
   summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
-  # nest() %>%
-  # mutate(mdl = map(
-  #   data,
-  #   ~ loess(cor ~ lag, data = .)
-  # ),
-  # fit = map(mdl, `[[`, "fitted")) %>%
-  # select(-mdl) %>% 
-  # unnest() %>%  
   ungroup() %>% 
   group_by(country_region) %>% 
   arrange(country_region, -cor) %>% 
@@ -283,7 +269,7 @@ mobility.data %>%
 ```
 
 ```{r fig.height=10, fig.width=20}
-models %>% 
+model.data %>% 
   select(-mdl) %>% 
   unnest() %>% 
   filter(
