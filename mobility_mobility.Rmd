@@ -242,9 +242,18 @@ cases.model.data %>%
   group_by(country_region) %>%
   plot.model.data(.feature1 = "date", .feature2 = "diff")
 ```
+```{r}
+mobility.data %>% glimpse()
+```
 
 
 ```{r fig.height=10, fig.width=20}
+feature <- "parks_percent_change_from_baseline"
+mobility.data.model.data <- (
+  mobility.data %>%
+    group_by(country_region, sub_region_1) %>%
+    fit.loess.model(feature, "timestamp")
+)$data
 mobility.data.model.data %>% 
   mutate(date=date+14)%>%
   filter(!is.na(overall_percent_change_from_baseline) & is.na(sub_region_1)) %>% 
@@ -264,20 +273,20 @@ mobility.data.model.data %>%
 ```
 
 
-```{r}
-feature <- "overall_percent_change_from_baseline_diff"
+```{r  fig.height=10, fig.width=20}
+
+feature <- "parks_percent_change_from_baseline_diff"
 mobility.data.model.data <-
   (
     mobility.data %>% filter(
-      !is.na(overall_percent_change_from_baseline_diff) &
-        !is.infinite(overall_percent_change_from_baseline_diff)
+      !is.na(!!sym(feature)) &
+        !is.infinite(!!sym(feature))
     ) %>%
       group_by(country_region, sub_region_1) %>% fit.loess.model(feature, "timestamp")
   )$data
-```
 
-```{r  fig.height=10, fig.width=20}
 mobility.data.model.data %>%
+  mutate(date=date+14)%>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
   mutate(!!feature:=-!!sym(feature), fit=-fit) %>% 
@@ -290,7 +299,7 @@ mobility.data.model.data %>%
       country_region == "Sweden" |
       country_region == "United States"
   ) %>%
-  plot.model.data(.feature1 = "date", .feature2 = feature)
+  plot.model.data(.feature1 = "date", .feature2 = feature, .show.noise = F)
 ```
 
 
@@ -320,6 +329,6 @@ mobility.data.model.data %>%
     
     
   ) %>% 
-  plot.model.data(.feature1 = "date", .feature2 = feature)
+  plot.model.data(.feature1 = "date", .feature2 = feature, .show.noise = T)
 ```
 
