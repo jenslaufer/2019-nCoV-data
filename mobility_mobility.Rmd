@@ -18,7 +18,7 @@ source("dataPreprocess.R")
 ```
 
 ```{r}
-mobility.data <- load.mobility.google() 
+mobility.data <- load.mobility.google(F) 
 ```
 
 
@@ -72,7 +72,6 @@ mobility.data %>%
 ## Multivariate Analysis
 
 ```{r}
-
 mobility.data <- preprocess.mobility.data(mobility.data)
 ```
 
@@ -80,9 +79,9 @@ mobility.data <- preprocess.mobility.data(mobility.data)
 
 ```{r fig.height=10, fig.width=20}
 
-loess.model <- (mobility.data %>% 
+mobile.data.model.data <- (mobility.data %>% 
     group_by(country_region, sub_region_1) %>% fit.loess.model("overall_percent_change_from_baseline", "timestamp"))$data
-loess.model %>%
+mobile.data.model.data %>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
   filter(
@@ -160,19 +159,6 @@ filtered.mobility <- mobility.data %>%
 ```
 
 
-```{r}
-lag.data <- function(data, mobility, .lag) {
-  data %>%
-    inner_join(mobility) %>%
-    mutate(lag=as.integer(.lag)) %>% 
-    group_by(country_region) %>%
-    mutate(overall_percent_change_from_baseline = lag(overall_percent_change_from_baseline, .lag)) %>%
-    ungroup() %>%
-    na.omit()
-}
-
-```
-
 
 ```{r}
 diff.mobility.scatter.plot <- function(data) {
@@ -203,25 +189,28 @@ mobility.chg <- mobility.data %>%
 
 
 
+
 ```{r fig.height=10, fig.width=20}
-seq(0,30,1) %>% 
-  map(~lag.data(filtered.confimed, filtered.mobility, .)) %>% 
-  bind_rows() %>% 
-  group_by(country_region, lag) %>% 
-  summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 
-  nest() %>%
-  mutate(mdl = map(
-    data,
-    ~ loess(cor ~ lag, data = .)
-  ),
-  fit = map(mdl, `[[`, "fitted")) %>%
-  select(-mdl) %>% 
-  unnest() %>% 
-  ggplot(aes(x=lag, y=cor, color=country_region)) +
+
+corr.data.model <- (
+  seq(0, 30, 1) %>%
+    map( ~ lag.data(filtered.confimed, filtered.mobility, ., "overall_percent_change_from_baseline")) %>%
+    bind_rows() %>%
+    group_by(country_region, lag) %>%
+    summarise(cor = cor(
+      diff, overall_percent_change_from_baseline
+    )) %>%
+    fit.loess.model("cor", "lag")
+)$data
+
+corr.data.model %>%
+  ggplot(aes(x = lag, y = cor, color = country_region)) +
   geom_line() +
-  geom_line(aes(y=fit), size=2) +
-  facet_wrap(~country_region)
+  geom_line(aes(y = fit), size = 2) +
+  facet_wrap( ~ country_region) +
+  scale_color_tableau()
 ```
+
 
 ```{r}
 mobility.chg
@@ -231,7 +220,7 @@ mobility.chg
 
 ```{r}
 seq(0,30,1) %>% 
-  map(~lag.data(confirmed %>% inner_join(mobility.chg), mobility.data %>% inner_join(mobility.chg), .)) %>% 
+  map(~lag.data(confirmed %>% inner_join(mobility.chg), mobility.data %>% inner_join(mobility.chg), ., "overall_percent_change_from_baseline")) %>% 
   bind_rows() %>% 
   group_by(country_region, lag) %>% 
   summarise(cor=cor(diff, overall_percent_change_from_baseline)) %>% 

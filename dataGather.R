@@ -5,12 +5,14 @@ library(lubridate)
 PYTHON.PATH <- "/home/jens/anaconda3/bin/python"
 
 
-load.mobility.google <- function() {
+load.mobility.google <- function(download = T) {
   filename <- "data/google_mobitilty.csv"
-  download.file(
-    "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv",
-    filename
-  )
+  if (download == T) {
+    download.file(
+        "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv",
+      filename
+    )
+  }
   read_csv(filename)
 }
 

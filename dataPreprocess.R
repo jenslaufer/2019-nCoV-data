@@ -33,7 +33,7 @@ preprocess.data <- function(data) {
     bind_rows(data %>% distinct(name)
               %>%
                 pull(name) %>%
-                map(~ .add.forecast(data, (.), 7))) %>%
+                map( ~ .add.forecast(data, (.), 7))) %>%
     group_by(name) %>%
     mutate(day = row_number()) %>%
     ungroup()
@@ -96,4 +96,17 @@ fit.loess.model <-
       "data" = models %>% select(-mdl) %>% unnest(),
       "models" = models %>% select(country_region, mdl)
     )
+  }
+
+
+
+lag.data <-
+  function(cases, mobility, .lag, feature) {
+    cases %>%
+      inner_join(mobility) %>%
+      mutate(lag = as.integer(.lag)) %>%
+      group_by(country_region) %>%
+      mutate(!!.feature := lag(!!sym(.feature), .lag)) %>%
+      ungroup() %>%
+      na.omit()
   }
