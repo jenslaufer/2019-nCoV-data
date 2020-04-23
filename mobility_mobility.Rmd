@@ -71,11 +71,11 @@ mobility.data %>%
 
 ## Multivariate Analysis
 
-
-
 ```{r}
-mobility.data <- preprocess.mobility.data(mobility.data) 
+
+mobility.data <- preprocess.mobility.data(mobility.data)
 ```
+
 
 
 ```{r fig.height=10, fig.width=20}
@@ -270,8 +270,6 @@ mobility.data %>%
 
 ```{r fig.height=10, fig.width=20}
 model.data %>% 
-  select(-mdl) %>% 
-  unnest() %>% 
   filter(
       country_region == "France" |
         country_region == "Germany" |

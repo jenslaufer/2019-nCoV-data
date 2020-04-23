@@ -33,7 +33,7 @@ preprocess.data <- function(data) {
     bind_rows(data %>% distinct(name)
               %>%
                 pull(name) %>%
-                map( ~ .add.forecast(data, (.), 7))) %>%
+                map(~ .add.forecast(data, (.), 7))) %>%
     group_by(name) %>%
     mutate(day = row_number()) %>%
     ungroup()
@@ -70,7 +70,9 @@ preprocess.mobility.data <- function(data) {
       overall_percent_change_from_baseline = (
         retail_and_recreation_percent_change_from_baseline + grocery_and_pharmacy_percent_change_from_baseline + parks_percent_change_from_baseline + transit_stations_percent_change_from_baseline + workplaces_percent_change_from_baseline + residential_percent_change_from_baseline
       ) / 6
-    )
+    ) %>%
+    mutate_if(str_detect(names(.), "change_from_baseline"),
+              funs(diff = (.) / lag(.)))
 }
 
 fit.loess.model <-
