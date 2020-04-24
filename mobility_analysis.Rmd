@@ -93,6 +93,15 @@ mobility.data %>%
 mobility.data <- preprocess.mobility.data(mobility.data)
 ```
 
+
+```{r fig.height=10, fig.width=20}
+cases.model.data %>%
+  filter(country_region %in% filtered.countries) %>%
+  group_by(country_region) %>%
+  plot.model.data(.feature1 = "date", .feature2 = "diff")
+```
+
+
 ```{r  fig.height=10, fig.width=20}
 feature <- "overall_percent_change_from_baseline"
 (
@@ -143,7 +152,25 @@ feature <- "overall_percent_change_from_baseline"
                   .feature2 = "cor",
                   is.date = F)
 ```
-
+```{r fig.height=10, fig.width=20}
+feature <- "parks_percent_change_from_baseline_diff"
+(
+  seq(0, 30, 1) %>%
+    map(~ lag.data(
+      filtered.confirmed,
+      filtered.mobility,
+      .,
+      feature
+    )) %>%
+    bind_rows() %>%
+    group_by(country_region, lag) %>%
+    summarise(cor = cor(diff,!!sym(feature))) %>%
+    fit.loess.model("cor", "lag")
+)$data %>%
+  plot.model.data(.feature1 = "lag",
+                  .feature2 = "cor",
+                  is.date = F)
+```
 
 
 
@@ -186,12 +213,6 @@ seq(0,30,1) %>%
 ```
 
 
-```{r fig.height=10, fig.width=20}
-cases.model.data %>%
-  filter(country_region %in% filtered.countries) %>%
-  group_by(country_region) %>%
-  plot.model.data(.feature1 = "date", .feature2 = "diff")
-```
 
 
 ```{r fig.height=10, fig.width=20}
