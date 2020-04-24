@@ -24,7 +24,7 @@ filtered.countries <- c("France", "Germany", "Spain", "United Kingdom", "Italy",
 
 
 ```{r}
-mobility.data <- load.mobility.google(F) 
+mobility.data <- load.mobility.google(F) %>% preprocess.mobility.data()
 ```
 
 
@@ -37,6 +37,8 @@ confirmed <- load.data.bno.news() %>%
   na.omit() %>% 
   filter(!is.infinite(diff))
 ```
+
+
 
 
 
@@ -57,7 +59,7 @@ filtered.mobility <- mobility.data %>%
 
 
 ```{r fig.height=10, fig.width=20}
-plot.mobility.type.cases.fiff.plot <-
+plot.mobility.type.cases.diff.plot <-
   function(cases, mobility, feature) {
     (
       seq(0, 30, 1) %>%
@@ -70,14 +72,33 @@ plot.mobility.type.cases.fiff.plot <-
         bind_rows() %>%
         group_by(country_region, lag) %>%
         summarise(cor = cor(diff, !!sym(feature))) %>%
+        na.omit() %>% 
         fit.loess.model("cor", "lag")
     )$data %>%
       plot.model.data(.feature1 = "lag",
                       .feature2 = "cor",
-                      is.date = F)
+                      is.date = F) +
+      ggtitle(label=feature)
   }
 
 ```
+
+
+
+
+```{r fig.height=10, fig.width=20}
+filtered.mobility %>% 
+  select_if(str_detect(names(.), "percent_change_from_baseline") & !str_detect(names(.), "_diff")) %>%  
+  colnames() %>%  
+  map(~plot.mobility.type.cases.diff.plot(filtered.confirmed, filtered.mobility, .))
+  
+```
+
+
+```{r}
+
+```
+
 
 
 
