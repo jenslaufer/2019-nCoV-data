@@ -65,6 +65,15 @@ german <- function(plot) {
     labs(title = "Bestätigte COVID-19 Fälle", subtitle = "Fallzahlen an einem bestimmten Tag nach Erreichen von 100 Fällen")
 }
 
+
+
+diff.mobility.scatter.plot <- function(data) {
+  data %>%
+    ggplot(aes(x = overall_percent_change_from_baseline, y = diff)) +
+    geom_point() +
+    facet_wrap( ~ country_region)
+}
+
 plot.model.data <-
   function(data,
            .fit.feature = "fit",
@@ -82,7 +91,7 @@ plot.model.data <-
       ), size = 2) +
       geom_hline(yintercept = 0) +
       scale_color_tableau() +
-      facet_wrap(~ country_region, scales = "free") +
+      facet_wrap( ~ country_region, scales = "free") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     if (is.date) {
       plot <- plot + scale_x_date(date_breaks = "2 day")

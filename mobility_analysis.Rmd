@@ -19,6 +19,11 @@ source("visualisations.R")
 ```
 
 ```{r}
+filtered.countries <- c("France", "Germany", "Spain", "United Kingdom", "Italy", "United States")
+```
+
+
+```{r}
 mobility.data <- load.mobility.google(F) 
 ```
 
@@ -32,6 +37,9 @@ confirmed <- load.data.bno.news() %>%
   na.omit() %>% 
   filter(!is.infinite(diff))
 ```
+
+
+
 
 
 
@@ -85,30 +93,16 @@ mobility.data %>%
 mobility.data <- preprocess.mobility.data(mobility.data)
 ```
 
-
-
-```{r}
+```{r  fig.height=10, fig.width=20}
 feature <- "overall_percent_change_from_baseline"
-mobility.data.model.data <- (
+(
   mobility.data %>%
     group_by(country_region, sub_region_1) %>%
     fit.loess.model(feature, "timestamp")
-)$data
-```
-
-```{r  fig.height=10, fig.width=20}
-mobility.data.model.data %>%
+)$data %>%
   filter(!is.na(!!sym(feature)) &
            is.na(sub_region_1)) %>%
-  filter(
-    country_region == "France" |
-      country_region == "Germany" |
-      country_region == "Spain" |
-      country_region == "United Kingdom" |
-      country_region == "Italy" |
-      country_region == "Sweden" |
-      country_region == "United States"
-  ) %>%
+  filter(country_region %in% filtered.countries) %>%
   plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
 
@@ -119,46 +113,37 @@ mobility.data.model.data %>%
 ```{r}
 cases.model.data <-  (confirmed %>% mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
   group_by(country_region) %>% fit.loess.model("diff", "timestamp"))$data
-```
 
 
+filtered.confirmed <- confirmed %>% 
+  filter(country_region %in% filtered.countries) 
 
-
-```{r}
-filtered.confimed <- cases.model.data %>% 
-  filter(
-      country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "United States") 
-```
-
-```{r}
 filtered.mobility <- mobility.data %>% 
-  filter(
-      (country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "United States") & is.na(sub_region_1)) %>% 
+  filter((country_region %in% filtered.countries) & is.na(sub_region_1)) %>% 
   select(country_region, date, overall_percent_change_from_baseline) 
 ```
 
 
-
-```{r}
-diff.mobility.scatter.plot <- function(data) {
-  data %>%
-    ggplot(aes(x = overall_percent_change_from_baseline, y = diff)) +
-    geom_point() +
-    facet_wrap(~country_region)
-}
+```{r fig.height=10, fig.width=20}
+(
+  seq(0, 30, 1) %>%
+    map(
+      ~ lag.data(
+        filtered.confirmed,
+        filtered.mobility,
+        .,
+        "overall_percent_change_from_baseline"
+      )
+    ) %>%
+    bind_rows() %>%
+    group_by(country_region, lag) %>%
+    summarise(cor = cor(
+      diff, overall_percent_change_from_baseline
+    )) %>%
+    fit.loess.model("cor", "lag")
+)$data %>%
+  plot.model.data(.feature1 = "lag", .feature2 = "cor", is.date=F)
 ```
-
-
 I filter all countries with significant decrease in mobility:
 
 ```{r}
@@ -174,38 +159,6 @@ mobility.chg <- mobility.data %>%
   arrange(chg) %>% 
   filter(chg < -70)
   
-```
-
-
-
-
-```{r fig.height=10, fig.width=20}
-
-
-corr.data.model <- (
-  seq(0, 30, 1) %>%
-    map(
-      ~ lag.data(
-        filtered.confimed,
-        filtered.mobility,
-        .,
-        "overall_percent_change_from_baseline"
-      )
-    ) %>%
-    bind_rows() %>%
-    group_by(country_region, lag) %>%
-    summarise(cor = cor(
-      diff, overall_percent_change_from_baseline
-    )) %>%
-    fit.loess.model("cor", "lag")
-)$data
-
-corr.data.model %>%
-  plot.model.data(.feature1 = "lag", .feature2 = "cor", is.date=F)
-```
-
-
-```{r}
 mobility.chg
 ```
 
@@ -230,76 +183,43 @@ seq(0,30,1) %>%
 
 ```{r fig.height=10, fig.width=20}
 cases.model.data %>%
-  filter(
-    country_region == "France" |
-      country_region == "Germany" |
-      country_region == "Spain" |
-      country_region == "United Kingdom" |
-      country_region == "Italy" |
-      country_region == "Sweden" |
-      country_region == "United States"
-  ) %>%
+  filter(country_region %in% filtered.countries) %>%
   group_by(country_region) %>%
   plot.model.data(.feature1 = "date", .feature2 = "diff")
-```
-```{r}
-mobility.data %>% glimpse()
 ```
 
 
 ```{r fig.height=10, fig.width=20}
 feature <- "parks_percent_change_from_baseline"
-mobility.data.model.data <- (
+(
   mobility.data %>%
     group_by(country_region, sub_region_1) %>%
     fit.loess.model(feature, "timestamp")
-)$data
-mobility.data.model.data %>% 
-  mutate(date=date+14)%>%
-  filter(!is.na(overall_percent_change_from_baseline) & is.na(sub_region_1)) %>% 
-  filter(
-    
-      country_region == "France" |
-        country_region == "Germany" |
-        country_region == "Spain" |
-        country_region == "United Kingdom" |
-        country_region == "Italy" |
-        country_region == "Sweden" |
-        country_region == "United States"
-    
-    
-  ) %>% 
+)$data %>%
+  mutate(date = date + 14) %>%
+  filter(!is.na(overall_percent_change_from_baseline) &
+           is.na(sub_region_1)) %>%
+  filter(country_region %in% filtered.countries) %>%
   plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
 
 
 ```{r  fig.height=10, fig.width=20}
-
 feature <- "parks_percent_change_from_baseline_diff"
-mobility.data.model.data <-
-  (
-    mobility.data %>% filter(
-      !is.na(!!sym(feature)) &
-        !is.infinite(!!sym(feature))
-    ) %>%
-      group_by(country_region, sub_region_1) %>% fit.loess.model(feature, "timestamp")
-  )$data
 
-mobility.data.model.data %>%
-  mutate(date=date+14)%>%
+(
+  mobility.data %>% filter(!is.na(!!sym(feature)) &
+                             !is.infinite(!!sym(feature))) %>%
+    group_by(country_region, sub_region_1) %>% fit.loess.model(feature, "timestamp")
+)$data %>%
+  mutate(date = date + 14) %>%
   filter(!is.na(overall_percent_change_from_baseline) &
            is.na(sub_region_1)) %>%
-  #mutate(!!feature:=-!!sym(feature), fit=-fit) %>% 
-  filter(
-    country_region == "France" |
-      country_region == "Germany" |
-      country_region == "Spain" |
-      country_region == "United Kingdom" |
-      country_region == "Italy" |
-      country_region == "Sweden" |
-      country_region == "United States"
-  ) %>%
-  plot.model.data(.feature1 = "date", .feature2 = feature, .show.noise = T)
+  #mutate(!!feature:=-!!sym(feature), fit=-fit) %>%
+  filter(country_region %in% filtered.countries) %>%
+  plot.model.data(.feature1 = "date",
+                  .feature2 = feature,
+                  .show.noise = T)
 ```
 
 
