@@ -1,7 +1,7 @@
 ---
 title: "Google Mobilty"
 author: "Jens Laufer"
-date: "19 4 2020"
+date: "19.04.2020"
 output: html_document
 ---
 
@@ -115,62 +115,6 @@ feature <- "overall_percent_change_from_baseline"
   plot.model.data(.feature1 = "date", .feature2 = feature)
 ```
 
-
-
-
-
-```{r}
-cases.model.data <-  (confirmed %>% mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
-  group_by(country_region) %>% fit.loess.model("diff", "timestamp"))$data
-
-
-filtered.confirmed <- cases.model.data %>% 
-  filter(country_region %in% filtered.countries) 
-
-filtered.mobility <- mobility.data %>% 
-  filter((country_region %in% filtered.countries) & is.na(sub_region_1)) %>% 
-  select(-sub_region_1) 
-```
-
-
-```{r fig.height=10, fig.width=20}
-feature <- "overall_percent_change_from_baseline"
-(
-  seq(0, 30, 1) %>%
-    map(~ lag.data(
-      filtered.confirmed,
-      filtered.mobility,
-      .,
-      feature
-    )) %>%
-    bind_rows() %>%
-    group_by(country_region, lag) %>%
-    summarise(cor = cor(diff,!!sym(feature))) %>%
-    fit.loess.model("cor", "lag")
-)$data %>%
-  plot.model.data(.feature1 = "lag",
-                  .feature2 = "cor",
-                  is.date = F)
-```
-```{r fig.height=10, fig.width=20}
-feature <- "parks_percent_change_from_baseline_diff"
-(
-  seq(0, 30, 1) %>%
-    map(~ lag.data(
-      filtered.confirmed,
-      filtered.mobility,
-      .,
-      feature
-    )) %>%
-    bind_rows() %>%
-    group_by(country_region, lag) %>%
-    summarise(cor = cor(diff,!!sym(feature))) %>%
-    fit.loess.model("cor", "lag")
-)$data %>%
-  plot.model.data(.feature1 = "lag",
-                  .feature2 = "cor",
-                  is.date = F)
-```
 
 
 

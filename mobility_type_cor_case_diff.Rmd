@@ -1,0 +1,91 @@
+---
+title: "Google Mobilty"
+author: "Jens Laufer"
+date: "19 4 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+```
+
+```{r}
+library(tidyverse)
+library(glue)
+library(ggthemes)
+source("dataGather.R")
+source("dataPreprocess.R")
+source("visualisations.R")
+```
+
+```{r}
+filtered.countries <- c("France", "Germany", "Spain", "United Kingdom", "Italy", "United States")
+```
+
+
+```{r}
+mobility.data <- load.mobility.google(F) 
+```
+
+
+```{r}
+confirmed <- load.data.bno.news() %>% 
+  preprocess.data() %>% 
+  filter(type=="historical") %>% 
+  select(name, date, diff) %>% 
+  rename(country_region=name) %>% 
+  na.omit() %>% 
+  filter(!is.infinite(diff))
+```
+
+
+
+
+
+```{r}
+cases.model.data <-  (confirmed %>% mutate(timestamp=as.numeric(as.POSIXct(date))) %>% 
+  group_by(country_region) %>% fit.loess.model("diff", "timestamp"))$data
+
+
+filtered.confirmed <- cases.model.data %>% 
+  filter(country_region %in% filtered.countries) 
+
+filtered.mobility <- mobility.data %>% 
+  filter((country_region %in% filtered.countries) & is.na(sub_region_1)) %>% 
+  select(-sub_region_1) 
+```
+
+
+```{r fig.height=10, fig.width=20}
+plot.mobility.type.cases.fiff.plot <-
+  function(cases, mobility, feature) {
+    (
+      seq(0, 30, 1) %>%
+        map(
+          ~ lag.data(cases,
+                     mobility,
+                     .,
+                     feature)
+        ) %>%
+        bind_rows() %>%
+        group_by(country_region, lag) %>%
+        summarise(cor = cor(diff, !!sym(feature))) %>%
+        fit.loess.model("cor", "lag")
+    )$data %>%
+      plot.model.data(.feature1 = "lag",
+                      .feature2 = "cor",
+                      is.date = F)
+  }
+
+```
+
+
+
+
+
+
+
+
+
+
+
