@@ -114,7 +114,8 @@ source("visualisations.R")
 filtered.mobility %>%
   select_if(str_detect(names(.), "percent_change_from_baseline") &
               !str_detect(names(.), "_diff")) %>%
-  colnames() %>%  map(~ (diff.mobility.scatter.plot(merged, .)))
+  colnames() %>%  
+  map(~ (diff.mobility.scatter.plot(merged, .)))
 
 ```
 
