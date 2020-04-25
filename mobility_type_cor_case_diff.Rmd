@@ -108,9 +108,14 @@ filtered.mobility.normalized
 merged <- filtered.mobility.normalized %>%  inner_join(filtered.confirmed, by=c("country_region"="country_region", "date"="date"))
 ```
 
-```{r}
-merged %>% select_if()
-  gather(-country_region, -date, -diff, key = "feature", value="value")
+```{r fig.height=10, fig.width=20}
+library(ggrepel)
+source("visualisations.R")
+filtered.mobility %>%
+  select_if(str_detect(names(.), "percent_change_from_baseline") &
+              !str_detect(names(.), "_diff")) %>%
+  colnames() %>%  map(~ (diff.mobility.scatter.plot(merged, .)))
+
 ```
 
 
