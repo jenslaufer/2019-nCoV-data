@@ -69,7 +69,7 @@ plot.mobility.type.cases.diff.plot <-
                        feature,
                        .group = group)) %>%
         bind_rows() %>%
-        group_by(country_region, lag) %>%
+        group_by(!!sym(group), lag) %>%
         summarise(cor = cor(diff,!!sym(feature))) %>%
         na.omit() %>%
         fit.loess.model("cor", "lag")
