@@ -78,7 +78,8 @@ preprocess.mobility.data <- function(data) {
 fit.loess.model <-
   function(data,
            .feature1,
-           .feature2) {
+           .feature2,
+           .id = "country_region") {
     models <- data %>%
       filter(!is.na(!!sym(.feature1))) %>%
       mutate(num = n()) %>%
@@ -94,18 +95,18 @@ fit.loess.model <-
     
     list(
       "data" = models %>% select(-mdl) %>% unnest(),
-      "models" = models %>% select(country_region, mdl)
+      "models" = models %>% select(!!sym(.id), mdl)
     )
   }
 
 
 
 lag.data <-
-  function(cases, mobility, .lag, .feature) {
+  function(cases, mobility, .lag, .feature, .group = "country_region") {
     cases %>%
       inner_join(mobility) %>%
       mutate(lag = as.integer(.lag)) %>%
-      group_by(country_region) %>%
+      group_by(!!sym(.group)) %>%
       mutate(!!.feature := lag(!!sym(.feature), .lag)) %>%
       ungroup() %>%
       na.omit()
