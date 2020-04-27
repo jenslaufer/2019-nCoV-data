@@ -88,9 +88,6 @@ plot.mobility.type.cases.diff.plot <-
 
 ```
 
-```{r}
-
-```
 
 
 ```{r fig.height=10, fig.width=20}
