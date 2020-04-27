@@ -60,25 +60,27 @@ filtered.mobility <- mobility.data %>%
 
 ```{r fig.height=10, fig.width=20}
 plot.mobility.type.cases.diff.plot <-
-  function(cases, mobility, feature) {
+  function(cases, mobility, feature, group="country_region") {
     (
       seq(0, 30, 1) %>%
-        map(
-          ~ lag.data(cases,
-                     mobility,
-                     .,
-                     feature)
-        ) %>%
+        map(~ lag.data(cases,
+                       mobility,
+                       .,
+                       feature,
+                       .group = group)) %>%
         bind_rows() %>%
         group_by(country_region, lag) %>%
-        summarise(cor = cor(diff, !!sym(feature))) %>%
-        na.omit() %>% 
+        summarise(cor = cor(diff,!!sym(feature))) %>%
+        na.omit() %>%
         fit.loess.model("cor", "lag")
     )$data %>%
-      plot.model.data(.feature1 = "lag",
-                      .feature2 = "cor",
-                      is.date = F) +
-      ggtitle(label=feature)
+      plot.model.data(
+        .feature1 = "lag",
+        .feature2 = "cor",
+        is.date = F,
+        .groupvar = group
+      ) +
+      ggtitle(label = feature)
   }
 
 ```
