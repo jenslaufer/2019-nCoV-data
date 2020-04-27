@@ -81,7 +81,7 @@ diff.mobility.scatter.plot <- function(data, feature) {
     geom_vline(xintercept = 0, linetype = "dotted") +
     geom_hline(yintercept = 1, linetype = "dotted") +
     scale_color_tableau() +
-    facet_wrap(~ country_region) +
+    facet_wrap( ~ country_region) +
     labs(title = feature) +
     geom_smooth(method = "lm")
 }
@@ -92,18 +92,18 @@ plot.model.data <-
            .feature1,
            .feature2,
            is.date = T,
-           .show.noise = T) {
+           .show.noise = T,
+           .groupvar = "country_region") {
     plot <- data %>%
       ggplot() +
       geom_line(aes(
         x = !!sym(.feature1),
         y = !!sym(.fit.feature),
-        color =
-          country_region
+        color = !!sym(.groupvar)
       ), size = 2) +
       geom_hline(yintercept = 0) +
       scale_color_tableau() +
-      facet_wrap(~ country_region, scales = "free") +
+      facet_wrap(as.formula(paste("~", .groupvar)), scales = "free") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     if (is.date) {
       plot <- plot + scale_x_date(date_breaks = "2 day")
@@ -113,8 +113,7 @@ plot.model.data <-
         geom_line(aes(
           x = !!sym(.feature1),
           y = !!sym(.feature2),
-          color =
-            country_region
+          color = !!sym(.groupvar)
         ))
     }
     plot
