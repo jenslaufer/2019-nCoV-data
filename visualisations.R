@@ -67,24 +67,25 @@ german <- function(plot) {
 
 
 
-diff.mobility.scatter.plot <- function(data, feature) {
-  data %>%
-    mutate(label = ifelse(diff < 1.1 &
-                            !!sym(feature) > -10, as.character(date), "")) %>%
-    ggplot(aes(
-      x = !!sym(feature),
-      y = diff,
-      color = country_region
-    )) +
-    geom_point() +
-    geom_label_repel(aes(label = label)) +
-    geom_vline(xintercept = 0, linetype = "dotted") +
-    geom_hline(yintercept = 1, linetype = "dotted") +
-    scale_color_tableau() +
-    facet_wrap( ~ country_region) +
-    labs(title = feature) +
-    geom_smooth(method = "lm")
-}
+diff.mobility.scatter.plot <-
+  function(data, feature, .groupvar = "country_region") {
+    data %>%
+      mutate(label = ifelse(diff < 1.1 &
+                              !!sym(feature) > -10, as.character(date), "")) %>%
+      ggplot(aes(
+        x = !!sym(feature),
+        y = diff,
+        color = !!sym(.groupvar)
+      )) +
+      geom_point() +
+      geom_label_repel(aes(label = label)) +
+      geom_vline(xintercept = 0, linetype = "dotted") +
+      geom_hline(yintercept = 1, linetype = "dotted") +
+      scale_color_tableau() +
+      facet_wrap(as.formula(paste("~", .groupvar))) +
+      labs(title = feature) +
+      geom_smooth(method = "lm")
+  }
 
 plot.model.data <-
   function(data,
