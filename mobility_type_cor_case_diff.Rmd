@@ -49,9 +49,11 @@ cases.model.data <-  (confirmed %>% mutate(timestamp=as.numeric(as.POSIXct(date)
   group_by(country_region) %>% fit.loess.model("diff", "timestamp"))$data
 
 
-filtered.confirmed <- cases.model.data  
+filtered.confirmed <- cases.model.data %>%
+  filter(country_region %in% filtered.countries)
 
 filtered.mobility <- mobility.data %>% 
+  filter(country_region %in% filtered.countries) %>% 
   filter(is.na(sub_region_1)) %>% 
   select(-sub_region_1) 
 ```
@@ -59,25 +61,26 @@ filtered.mobility <- mobility.data %>%
 
 ```{r fig.height=10, fig.width=20}
 plot.mobility.type.cases.diff.plot <-
-  function(cases, mobility, feature, group="country_region") {
+  function(cases, mobility, feature, group = "country_region", plot.group="country_region") {
     (
       seq(0, 30, 1) %>%
-        map(~ lag.data(cases,
-                       mobility,
-                       .,
-                       feature,
-                       .group = group)) %>%
+        map( ~ lag.data(cases,
+                        mobility,
+                        .,
+                        feature,
+                        .group = group)) %>%
         bind_rows() %>%
         group_by(!!sym(group), lag) %>%
-        summarise(cor = cor(diff,!!sym(feature))) %>%
+        summarise(cor = cor(diff, !!sym(feature))) %>%
         na.omit() %>%
         fit.loess.model("cor", "lag", group)
     )$data %>%
+      mutate(!!feature := feature) %>%
       plot.model.data(
         .feature1 = "lag",
         .feature2 = "cor",
         is.date = F,
-        .groupvar = group
+        .groupvar = plot.group
       ) +
       ggtitle(label = feature)
   }
@@ -85,54 +88,11 @@ plot.mobility.type.cases.diff.plot <-
 ```
 
 
-```{r}
-filtered.mobility %>% glimpse
-```
-
-
-```{r}
-feature <- "workplaces_percent_change_from_baseline"
-group <- ""
-cases <- filtered.confirmed
-mobility <- filtered.mobility
-
-.feature1 <- "lag"
-.fit.feature <- "fit"
-.groupvar <- feature
-
-
-(
-  seq(0, 30, 1) %>%
-    map(~ lag.data(cases,
-                   mobility,
-                   .,
-                   feature,
-                   .group = group)) %>%
-    bind_rows() %>%
-    group_by(!!sym(group), lag) %>%
-    summarise(cor = cor(diff,!!sym(feature))) %>%
-    na.omit() %>%
-    fit.loess.model("cor", "lag", group)
-)$data %>% 
-      ggplot() +
-      geom_line(aes(
-        x = !!sym(.feature1),
-        y = !!sym(.fit.feature),
-        color = !!sym(.groupvar)
-      ), size = 2) +
-      geom_hline(yintercept = 0) +
-      scale_color_tableau() +
-      facet_wrap(as.formula(paste("~", .groupvar)), scales = "free") +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-
-
 ```{r fig.height=10, fig.width=20}
 filtered.mobility %>% 
   select_if(str_detect(names(.), "percent_change_from_baseline") & !str_detect(names(.), "_diff")) %>%  
   colnames() %>%  
-  map(~plot.mobility.type.cases.diff.plot(filtered.confirmed, filtered.mobility, .))
+  map(~plot.mobility.type.cases.diff.plot(filtered.confirmed, filtered.mobility, ., group = "", plot.group = (.)))
   
 ```
 
@@ -146,11 +106,7 @@ filtered.mobility %>%
 ```
 
 
-```{r}
-filtered.mobility.normalized <- filtered.mobility %>% 
-  mutate(date=date+14)
-filtered.mobility.normalized
-```
+
 
 
 
