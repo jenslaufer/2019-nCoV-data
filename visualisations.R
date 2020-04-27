@@ -103,7 +103,7 @@ plot.model.data <-
         color = !!sym(.groupvar)
       ), size = 2) +
       geom_hline(yintercept = 0) +
-      scale_color_tableau() +
+      scale_color_tableau(palette = "Tableau 20") +
       facet_wrap(as.formula(paste("~", .groupvar)), scales = "free") +
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
     if (is.date) {

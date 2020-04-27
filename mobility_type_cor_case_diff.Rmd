@@ -19,12 +19,13 @@ source("visualisations.R")
 ```
 
 ```{r}
-filtered.countries <- c("France", "Germany", "Spain", "United Kingdom", "Italy", "United States")
+filtered.countries <- c("France", "Germany", "Spain", "United Kingdom", "Italy", "United States", 
+                        "Sweden", "Austria", "Switzerland", "Belgium", "Netherlands", "Canada")
 ```
 
 
 ```{r}
-mobility.data <- load.mobility.google(F) %>% preprocess.mobility.data()
+mobility.data <- load.mobility.google(T) %>% preprocess.mobility.data()
 ```
 
 
@@ -84,6 +85,10 @@ plot.mobility.type.cases.diff.plot <-
       ) +
       ggtitle(label = feature)
   }
+
+```
+
+```{r}
 
 ```
 
