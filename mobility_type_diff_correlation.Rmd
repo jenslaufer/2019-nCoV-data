@@ -83,25 +83,4 @@ calc.corr <- function(cases.data, mobility.data, .lag) {
 
 
 ```
- %>% 
-  ggplot(aes(x=lag, y=cor)) +
-  geom_line() +
-  facet_wrap(~feature, scales = "free")
-
-models <- data %>%
-      filter(!is.na(!!sym(.feature1))) %>%
-      mutate(num = n()) %>%
-      filter(num > 1) %>%
-      select(-num) %>%
-      nest() %>%
-      mutate(mdl = map(data,
-                       ~ loess(
-                         !!sym(.feature1) ~ !!sym(.feature2), data = .
-                       )),
-             fit = map(mdl, `[[`, "fitted")) %>%
-      ungroup()
-    
-    list(
-      "data" = models %>% select(-mdl) %>% unnest(),
-      "models" = models %>% select(!!sym(.id), mdl)
-    )
+ 
