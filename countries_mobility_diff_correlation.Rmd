@@ -89,16 +89,6 @@ plot.mobility.type.cases.diff.plot <-
 ```
 
 
-
-```{r fig.height=10, fig.width=20}
-filtered.mobility %>% 
-  select_if(str_detect(names(.), "percent_change_from_baseline") & !str_detect(names(.), "_diff")) %>%  
-  colnames() %>%  
-  map(~plot.mobility.type.cases.diff.plot(filtered.confirmed, filtered.mobility, ., group = "", plot.group = (.)))
-  
-```
-
-
 ```{r fig.height=10, fig.width=20}
 filtered.mobility %>% 
   select_if(str_detect(names(.), "percent_change_from_baseline") & !str_detect(names(.), "_diff")) %>%  
@@ -106,9 +96,6 @@ filtered.mobility %>%
   map(~plot.mobility.type.cases.diff.plot(filtered.confirmed, filtered.mobility, .))
   
 ```
-
-
-
 
 
 
