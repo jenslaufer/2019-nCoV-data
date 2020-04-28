@@ -61,7 +61,8 @@ calc.corr <- function(cases.data, mobility.data, .lag) {
     na.omit() %>%
     ungroup() %>%
     group_by(feature) %>%
-    summarise(cor = cor(diff, value), lag = .lag) 
+    summarise(cor = cor(diff, value), lag = .lag) %>% 
+    ungroup()
 }
 
 
